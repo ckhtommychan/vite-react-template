@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="BORHAZ">
+	<rect width="64" height="64" rx="14" fill="#4a0f1f" />
+	<path
+		d="M21.5 15h21l-1.7 14.2A9.2 9.2 0 0 1 32 37a9.2 9.2 0 0 1-8.8-7.8L21.5 15Z"
+		fill="#c99a4b"
+	/>
+	<path d="M32 37v10.5" stroke="#c99a4b" stroke-width="3.6" stroke-linecap="round" />
+	<path d="M23.5 49.5h17" stroke="#c99a4b" stroke-width="3.6" stroke-linecap="round" />
+</svg>
