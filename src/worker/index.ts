@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 const app = new Hono<{ Bindings: Env }>();
 
-app.get("/api/", (c) => c.json({ name: "Cloudflare" }));
+app.get("/api/", (c) => c.json({ name: "IDH", projects: ["redpen.idh.asia"] }));
 
 app.post("/api/subscribe", async (c) => {
 	const body = await c.req.json<{ email?: string }>().catch(() => null);
@@ -12,7 +12,7 @@ app.post("/api/subscribe", async (c) => {
 	}
 
 	// Replace with your mailing list provider (Mailchimp, Klaviyo, Resend...).
-	console.log("newsletter signup", email);
+	console.log("course notification signup", email);
 	return c.json({ ok: true });
 });
 

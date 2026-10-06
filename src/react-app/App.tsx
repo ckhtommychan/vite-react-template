@@ -2,104 +2,107 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import {
 	ArrowRight,
+	ArrowUpRight,
+	Calendar,
 	Check,
 	ChevronDown,
-	Grape,
-	Mail,
+	Clock,
+	Copy,
+	Download,
+	FileText,
+	Globe,
+	GraduationCap,
+	Layers,
 	MapPin,
 	Menu,
-	Phone,
-	Plus,
-	ShieldCheck,
-	ShoppingBag,
-	Truck,
-	Wine,
+	MessageCircle,
+	MonitorSmartphone,
+	Palette,
+	Send,
+	Sparkles,
+	Users,
 	X,
 } from "lucide-react";
 import "./App.css";
 
-const values = [
-	{ icon: Grape, title: "Native grapes", text: "Furmint, Hárslevelű, Kékfrankos" },
-	{ icon: Wine, title: "Cellar direct", text: "Small lots, chosen at the estate" },
-	{ icon: Truck, title: "Free HK delivery", text: "On orders over HK$800" },
-	{ icon: ShieldCheck, title: "Provenance kept", text: "Estate and vintage documented" },
-];
+const WHATSAPP_NUMBER = "85294828587";
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+	"你好，我想報名 Manus AI 一日工作坊，想了解下一班仲有冇位。",
+)}`;
+const VENUE = "九龍觀塘巧明街 95 號 世達中心 18 樓 F 室";
 
-const regions = [
+const highlights = [
 	{
-		name: "Tokaj",
-		tag: "Sweet and dry whites",
-		blurb:
-			"Volcanic hills where Furmint and Hárslevelű turn noble rot into the world's first protected sweet wine.",
-		foot: "UNESCO heritage since 2002",
-		image: "/images/region-tokaj.jpg",
+		icon: Users,
+		title: "小班教學（限額 6 人）",
+		text: "導師可以逐個跟進，唔會坐足兩小時都未郁過手。",
 	},
 	{
-		name: "Villány",
-		tag: "Full-bodied reds",
-		blurb:
-			"Hungary's warmest red region, with loess and limestone soils built for Cabernet Franc and Portugieser.",
-		foot: "South of the country, near the Croatian border",
-		image: "/images/region-villany.jpg",
+		icon: MonitorSmartphone,
+		title: "全程實戰操作",
+		text: "請自備手提電腦，課堂以實戰為主，邊學邊做。",
 	},
 	{
-		name: "Eger",
-		tag: "Bikavér blends",
-		blurb:
-			"Cool northern hills above a maze of carved cellars, producing the spicy, layered Bull's Blood blends.",
-		foot: "Cellars carved since the 1500s",
-		image: "/images/region-eger.jpg",
+		icon: GraduationCap,
+		title: "零基礎可參加",
+		text: "中小企老闆、管理層、行政人員到初學者都跟得上。",
+	},
+	{
+		icon: Sparkles,
+		title: "優惠價 HK$600",
+		text: "兩小時掌握 AI Agent 點樣改變你嘅工作模式。",
 	},
 ];
 
-const moreRegions = [
-	{ name: "Szekszárd", note: "Spicy Kékfrankos and Bikavér" },
-	{ name: "Balaton", note: "Fresh Olaszrizling by the lake" },
-	{ name: "Sopron", note: "Crisp Kékfrankos on the Austrian border" },
+const courseDetails = [
+	{ icon: Calendar, label: "開班日期", value: "10月6、20、27日（星期二）" },
+	{ icon: Clock, label: "時間", value: "下午 3:00 – 5:00" },
+	{ icon: Users, label: "名額", value: "小班教學（限額 6 人）" },
+	{ icon: GraduationCap, label: "講者", value: "Peter So、Aiden Lam" },
 ];
 
-const wines = [
+const usages = [
 	{
-		name: "Tokaji Aszú 5 Puttonyos",
-		region: "Tokaj",
-		style: "Sweet white · 2018",
-		note: "Apricot, honey and acacia blossom, cut by a bright citrus acid line.",
-		price: "HK$680",
-		image: "/images/wine-tokaji-aszu.jpg",
-		badge: "Icon",
+		title: "學識寫 Prompt",
+		text: "讓 AI 更準確完成你的要求，唔再問十次都唔中。",
 	},
 	{
-		name: "Egri Bikavér Superior",
-		region: "Eger",
-		style: "Dry red · 2019",
-		note: "Black cherry and dried herbs over the smoky minerality of volcanic soil.",
-		price: "HK$420",
-		image: "/images/wine-egri-bikaver.jpg",
-		badge: "Blend",
+		title: "用 AI 快速製作專業簡報（PPT）",
+		text: "由大綱到內容一次過搞定，提升簡報效率與質素。",
 	},
 	{
-		name: "Tokaji Discovery Case",
-		region: "Tokaj",
-		style: "Three bottles · mixed",
-		note: "Dry Furmint, Szamorodni and Aszú, packed as an introduction to the region.",
-		price: "HK$980",
-		image: "/images/collection-tokaji.jpg",
-		badge: "Case",
+		title: "用 AI 生成圖片內容",
+		text: "快速製作海報、社交媒體素材，唔需要設計底子。",
 	},
+];
+
+const audiences = [
+	"中小企老闆／創業人士",
+	"管理層及行政人員",
+	"想提升工作效率人士",
+	"想學 AI 的初學者",
+];
+
+const redpenFeatures = [
+	{ icon: FileText, text: "AI 生成可編輯大綱" },
+	{ icon: Palette, text: "逐頁配圖與參考圖風格對齊" },
+	{ icon: Sparkles, text: "AI 文案撰寫" },
+	{ icon: Globe, text: "支援 10 種輸出語言" },
+	{ icon: Layers, text: "完成後一鍵打包下載" },
+	{ icon: Download, text: "內建點數制，用量一目了然" },
 ];
 
 const navLinks = [
-	{ href: "#regions", label: "Regions" },
-	{ href: "#wines", label: "Wines" },
-	{ href: "#cellar", label: "Cellar" },
-	{ href: "#visit", label: "Visit" },
+	{ href: "#course", label: "AI 課程" },
+	{ href: "#redpen", label: "RedPen" },
+	{ href: "#about", label: "關於 IDH" },
+	{ href: "#contact", label: "聯絡我們" },
 ];
 
 function App() {
-	const [cartCount, setCartCount] = useState(0);
-	const [added, setAdded] = useState<string | null>(null);
-	const [menuOpen, setMenuOpen] = useState(false);
 	const [scrolled, setScrolled] = useState(false);
+	const [menuOpen, setMenuOpen] = useState(false);
+	const [copied, setCopied] = useState(false);
 	const [email, setEmail] = useState("");
 	const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
 
@@ -111,14 +114,18 @@ function App() {
 	}, []);
 
 	useEffect(() => {
-		if (added === null) return;
-		const timer = window.setTimeout(() => setAdded(null), 2000);
+		if (!copied) return;
+		const timer = window.setTimeout(() => setCopied(false), 2000);
 		return () => window.clearTimeout(timer);
-	}, [added]);
+	}, [copied]);
 
-	function addToCart(name: string) {
-		setCartCount((count) => count + 1);
-		setAdded(name);
+	async function copyVenue() {
+		try {
+			await navigator.clipboard.writeText(VENUE);
+			setCopied(true);
+		} catch {
+			setCopied(false);
+		}
 	}
 
 	async function handleSubscribe(event: FormEvent<HTMLFormElement>) {
@@ -144,17 +151,17 @@ function App() {
 		<div className="page">
 			<header className={`site-header${scrolled ? " is-scrolled" : ""}`}>
 				<div className="wrap header-inner">
-					<a className="brand" href="#top" aria-label="BORHÁZ home">
+					<a className="brand" href="#top" aria-label="IDH 首頁">
 						<span className="brand-mark" aria-hidden="true">
-							<Wine size={20} strokeWidth={1.8} />
+							IDH
 						</span>
 						<span className="brand-text">
-							<span className="brand-name">BORHÁZ</span>
-							<span className="brand-sub">Wines of Hungary</span>
+							<span className="brand-name">IDH</span>
+							<span className="brand-sub">香港 AI 教育與產品</span>
 						</span>
 					</a>
 
-					<nav className="nav" aria-label="Main">
+					<nav className="nav" aria-label="主要導覽">
 						{navLinks.map((link) => (
 							<a key={link.href} href={link.href}>
 								{link.label}
@@ -163,19 +170,20 @@ function App() {
 					</nav>
 
 					<div className="header-actions">
-						<button
-							type="button"
-							className="cart-btn"
-							aria-label={`Shopping case, ${cartCount} items`}
+						<a
+							className="btn btn-primary btn-sm"
+							href={WHATSAPP_LINK}
+							target="_blank"
+							rel="noreferrer"
 						>
-							<ShoppingBag size={19} strokeWidth={1.8} />
-							{cartCount > 0 && <span className="cart-count">{cartCount}</span>}
-						</button>
+							<MessageCircle size={17} />
+							立即報名
+						</a>
 						<button
 							type="button"
 							className="menu-btn"
 							aria-expanded={menuOpen}
-							aria-label={menuOpen ? "Close menu" : "Open menu"}
+							aria-label={menuOpen ? "關閉選單" : "開啟選單"}
 							onClick={() => setMenuOpen((open) => !open)}
 						>
 							{menuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -196,232 +204,329 @@ function App() {
 				<section className="hero">
 					<div className="hero-media">
 						<img
-							src="/images/hero-tokaj-vineyard.jpg"
-							alt="Terraced vineyards above the village of Tokaj in north-east Hungary"
+							src="/images/hero-kwun-tong.jpg"
+							alt="觀塘海濱夜景，鄰近 IDH 課室所在的觀塘商貿區"
 						/>
 					</div>
 					<div className="wrap hero-inner">
-						<span className="eyebrow">Tokaj · Eger · Villány</span>
-						<h1>Hungarian wine, straight from the cellar.</h1>
+						<span className="eyebrow">IDH · 香港 AI 教育與產品</span>
+						<h1>
+							用 AI 不只是提問，
+							<br />
+							<strong>而是真正幫你完成工作。</strong>
+						</h1>
 						<p className="hero-lede">
-							We work with growers across Hungary's historic wine regions and ship
-							small parcels to Hong Kong. Native grapes, old cellars, no middle layer.
+							IDH 是香港的 AI 教育與產品團隊。我們開辦小班實戰工作坊，教你在日常工作用 AI
+							完成研究、簡報與內容製作；同時親手開發 AI 工具，最新推出的是 RedPen。
 						</p>
 						<div className="hero-actions">
-							<a className="btn btn-primary" href="#wines">
-								Shop the collection
+							<a
+								className="btn btn-amber"
+								href={WHATSAPP_LINK}
+								target="_blank"
+								rel="noreferrer"
+							>
+								<MessageCircle size={18} />
+								報名 Manus AI 工作坊
+							</a>
+							<a className="btn btn-ghost" href="#redpen">
+								了解 RedPen
 								<ArrowRight size={18} />
 							</a>
-							<a className="btn btn-ghost" href="#regions">
-								Explore the regions
-							</a>
 						</div>
-						<div className="hero-stats">
-							<div className="stat">
-								<strong>22</strong>
-								<span>Wine regions</span>
-							</div>
-							<div className="stat">
-								<strong>1,000+</strong>
-								<span>Years of winemaking</span>
-							</div>
-							<div className="stat">
-								<strong>UNESCO</strong>
-								<span>Protected Tokaj landscape</span>
-							</div>
-						</div>
-						<a className="scroll-cue" href="#regions">
+						<ul className="hero-points">
+							<li>
+								<Check size={16} aria-hidden="true" />
+								小班教學，限額 6 人
+							</li>
+							<li>
+								<Check size={16} aria-hidden="true" />
+								2 小時實戰操作
+							</li>
+							<li>
+								<Check size={16} aria-hidden="true" />
+								零基礎可參加
+							</li>
+						</ul>
+						<a className="scroll-cue" href="#course">
 							<ChevronDown size={16} />
-							Scroll
+							睇課程詳情
 						</a>
 					</div>
 				</section>
 
-				<section className="value-band" aria-label="Why buy from us">
-					<div className="wrap value-grid">
-						{values.map((item) => (
-							<div className="value-item" key={item.title}>
-								<span className="value-icon" aria-hidden="true">
-									<item.icon size={22} strokeWidth={1.7} />
-								</span>
-								<div>
-									<strong>{item.title}</strong>
-									<p>{item.text}</p>
+				<section className="highlights" aria-label="IDH 特點">
+					<div className="wrap">
+						<div className="highlight-grid">
+							{highlights.map((item) => (
+								<div className="highlight" key={item.title}>
+									<span className="highlight-icon" aria-hidden="true">
+										<item.icon size={20} />
+									</span>
+									<div>
+										<strong>{item.title}</strong>
+										<p>{item.text}</p>
+									</div>
 								</div>
-							</div>
-						))}
+							))}
+						</div>
 					</div>
 				</section>
 
-				<section className="section" id="regions">
+				<section className="section" id="course">
 					<div className="wrap">
-						<div className="section-head">
-							<span className="kicker">Terroir</span>
-							<h2 className="section-title">Three regions worth knowing by name</h2>
-							<p className="section-lede">
-								Hungary has twenty-two wine regions, from volcanic hills in the
-								north-east to warm loess plateaus in the south. These three cover most
-								of what we import.
-							</p>
-						</div>
+						<div className="course-grid">
+							<div className="poster">
+								<img
+									src="/images/idh-academy-manus.jpg"
+									alt="IDH Academy Manus AI 一日工作坊課程海報"
+									width={1000}
+									height={1413}
+								/>
+							</div>
 
-						<div className="regions-grid">
-							{regions.map((region) => (
-								<article className="region-card" key={region.name}>
-									<div className="region-media">
-										<img src={region.image} alt={`${region.name} wine landscape`} />
-									</div>
-									<div className="region-body">
-										<span className="region-tag">{region.tag}</span>
-										<h3>{region.name}</h3>
-										<p>{region.blurb}</p>
-										<div className="region-foot">
-											<span>{region.foot}</span>
+							<div>
+								<span className="kicker">IDH ACADEMY · AI 教育</span>
+								<h2 className="course-title">Manus AI 一日工作坊</h2>
+								<p className="course-sub">
+									學識利用 Manus 自動完成研究、簡報、資料整理及工作流程，提升工作效率。
+								</p>
+								<p className="course-text">
+									兩小時內，你會由「識用 AI」進到「用 AI 幫你工作」。課堂以實戰操作為主，唔講空泛理論，落堂就可以直接用返自己嘅工作。
+								</p>
+
+								<dl className="detail-grid">
+									{courseDetails.map((item) => (
+										<div className="detail" key={item.label}>
+											<item.icon size={19} aria-hidden="true" />
+											<div>
+												<dt>{item.label}</dt>
+												<dd>{item.value}</dd>
+											</div>
+										</div>
+									))}
+									<div className="detail">
+										<MapPin size={19} aria-hidden="true" />
+										<div>
+											<dt>地點</dt>
+											<dd>{VENUE}</dd>
 										</div>
 									</div>
-								</article>
-							))}
-						</div>
+								</dl>
 
-						<div className="more-regions">
-							{moreRegions.map((region) => (
-								<div className="more-region" key={region.name}>
-									<MapPin size={20} strokeWidth={1.7} aria-hidden="true" />
-									<div>
-										<h4>{region.name}</h4>
-										<p>{region.note}</p>
-									</div>
+								<div className="price-row">
+									<span className="price">
+										<strong>HK$600</strong>
+										<span>/ 一位（優惠價）</span>
+									</span>
+									<a
+										className="btn btn-primary"
+										href={WHATSAPP_LINK}
+										target="_blank"
+										rel="noreferrer"
+									>
+										<MessageCircle size={18} />
+										WhatsApp 報名
+									</a>
+									<button type="button" className="btn btn-outline" onClick={copyVenue}>
+										<Copy size={17} />
+										複製地址
+									</button>
 								</div>
-							))}
-						</div>
-					</div>
-				</section>
-
-				<section className="section section-alt" id="wines">
-					<div className="wrap">
-						<div className="section-head-row">
-							<div className="section-head">
-								<span className="kicker">The collection</span>
-								<h2 className="section-title">Bottles in stock this week</h2>
-								<p className="section-lede">
-									A short list, rotated with each shipment. Every wine is tasted
-									before it goes on this page.
+								<p className="info-note">
+									名額有限，先到先得。請自備手提電腦參與課堂。付款可用 FPS 轉數快，付款後截圖
+									WhatsApp 傳送到 9482 8587。
 								</p>
 							</div>
-							<a className="btn btn-dark" href="#visit">
-								Join the list
-								<ArrowRight size={18} />
-							</a>
 						</div>
 
-						<div className="wines-grid">
-							{wines.map((wine) => (
-								<article className="wine-card" key={wine.name}>
-									<div className="wine-media">
-										<span className="wine-badge">{wine.badge}</span>
-										<img src={wine.image} alt={wine.name} />
-									</div>
-									<div className="wine-body">
-										<span className="wine-meta">
-											{wine.region} · {wine.style}
-										</span>
-										<h3>{wine.name}</h3>
-										<p className="wine-note">{wine.note}</p>
-										<div className="wine-foot">
-											<span className="wine-price">{wine.price}</span>
-											<button
-												type="button"
-												className="add-btn"
-												onClick={() => addToCart(wine.name)}
-											>
-												{added === wine.name ? (
-													<>
-														<Check size={16} />
-														Added
-													</>
-												) : (
-													<>
-														<Plus size={16} />
-														Add
-													</>
-												)}
-											</button>
-										</div>
-									</div>
-								</article>
-							))}
-						</div>
-					</div>
-				</section>
-
-				<section className="section" id="cellar">
-					<div className="wrap story">
-						<div className="story-media">
-							<img
-								src="/images/cellar-esztergom.jpg"
-								alt="A long arched brick wine cellar lined with barrels"
-							/>
-							<div className="story-badge">
-								<strong>1872</strong>
-								<span>First vintage</span>
+						<div className="info-cards">
+							<div className="info-card">
+								<h3>落堂後立即用得著的 3 大 AI 用法</h3>
+								<ol className="usage-list">
+									{usages.map((item, index) => (
+										<li key={item.title}>
+											<span className="usage-num">{index + 1}</span>
+											<div>
+												<strong>{item.title}</strong>
+												<p>{item.text}</p>
+											</div>
+										</li>
+									))}
+								</ol>
+							</div>
+							<div className="info-card">
+								<h3>適合對象</h3>
+								<ul className="tags">
+									{audiences.map((item) => (
+										<li className="tag" key={item}>
+											{item}
+										</li>
+									))}
+								</ul>
+								<p className="info-note">
+									零基礎可參加。我們會由最基本開始，逐步帶你完成一個真實的工作任務。
+								</p>
 							</div>
 						</div>
-						<div className="story-body">
-							<span className="kicker">The cellar</span>
-							<h2>Four generations of buying the same way</h2>
-							<p>
-								BORHÁZ started as a family cellar in Eger and still buys barrel by
-								barrel. We taste at the estate, take small allocations, and keep the
-								paperwork so you can trace every bottle back to its vineyard.
-							</p>
-							<ul className="check-list">
-								<li>
-									<Check size={18} aria-hidden="true" />
-									Allocations bought directly from growers, never through brokers
-								</li>
-								<li>
-									<Check size={18} aria-hidden="true" />
-									Cool-chain shipping from Budapest to Hong Kong
-								</li>
-								<li>
-									<Check size={18} aria-hidden="true" />
-									Tasting notes written in our cellar, not copied from a catalogue
-								</li>
-							</ul>
+					</div>
+				</section>
+
+				<section className="section section-white" id="redpen">
+					<div className="wrap">
+						<div className="project-grid">
+							<div>
+								<span className="project-badge">
+									<Sparkles size={14} />
+									最新推出
+								</span>
+								<h2 className="project-name">RedPen</h2>
+								<p className="project-tagline">把一個主題，變成整組可發佈的圖文</p>
+								<p className="project-text">
+									RedPen 是為小紅書與社群內容打造的 AI 創作工作台。輸入主題與頁數，AI
+									會生成可編輯大綱與逐頁配圖，支援參考圖風格、AI 文案與 10 種輸出語言，完成後一鍵打包下載。
+								</p>
+
+								<ul className="feature-list">
+									{redpenFeatures.map((feature) => (
+										<li key={feature.text}>
+											<feature.icon size={17} aria-hidden="true" />
+											{feature.text}
+										</li>
+									))}
+								</ul>
+
+								<p className="stack-note">
+									由 IDH 自家開發，AI 能力透過 OpenRouter 串接多種文字與圖片模型（GPT、Claude、Gemini、DALL·E、Flux），一個工作台搞掂大綱、文案與配圖。
+								</p>
+
+								<div className="contact-row">
+									<a
+										className="btn btn-primary"
+										href="https://redpen.idh.asia"
+										target="_blank"
+										rel="noreferrer"
+									>
+										前往 redpen.idh.asia
+										<ArrowUpRight size={18} />
+									</a>
+								</div>
+							</div>
+
+							<div className="browser-frame">
+								<div className="browser-bar">
+									<span className="browser-dot" />
+									<span className="browser-dot" />
+									<span className="browser-dot" />
+									<span className="browser-url">redpen.idh.asia</span>
+								</div>
+								<img
+									src="/images/redpen-ui.jpg"
+									alt="RedPen 創作工作台介面，顯示大綱步驟與逐頁配圖"
+									width={1140}
+									height={920}
+								/>
+							</div>
+						</div>
+
+						<div className="more-projects">
+							<div>
+								<h3>更多項目開發中</h3>
+								<p>
+									我們會在這裡陸續公開新產品。想第一時間知道，可以留低電郵或者直接 WhatsApp
+									我們。
+								</p>
+							</div>
+							<a className="btn btn-outline" href="#contact">
+								聯絡我們
+								<ArrowRight size={17} />
+							</a>
 						</div>
 					</div>
 				</section>
 
-				<section className="section visit" id="visit">
-					<div className="wrap visit-grid">
+				<section className="about" id="about">
+					<div className="about-media">
+						<img src="/images/hong-kong-harbour.jpg" alt="香港維多利亞港夜景" />
+					</div>
+					<div className="wrap about-grid">
 						<div>
-							<span className="kicker">Visit and taste</span>
-							<h2>Come by the cellar, or let the list come to you</h2>
+							<span className="kicker" style={{ color: "#9dc0ff" }}>
+								關於 IDH
+							</span>
+							<h2>香港團隊，做 AI 教育，也做自己的產品</h2>
 							<p>
-								Our Hong Kong tasting room opens Thursday to Sunday, and we pour six
-								wines by the glass. Bring a group and we will open something older.
+								我們在觀塘有一個小課室，也有一隊開發團隊。除了開班教 AI，我們日常就用同一套
+								AI 流程做自己的產品，所以課堂上教的，都是我們自己在用的做法。
 							</p>
-							<ul className="visit-details">
+							<p>
+								我們相信 AI 的價值不在於「問得好唔好」，而在於能否真正幫你完成工作。無論你是來上課，還是使用我們的產品，目標都一樣。
+							</p>
+						</div>
+						<div className="about-stats">
+							<div className="about-stat">
+								<strong>6 人</strong>
+								<span>每班限額</span>
+							</div>
+							<div className="about-stat">
+								<strong>2 小時</strong>
+								<span>工作坊時長</span>
+							</div>
+							<div className="about-stat">
+								<strong>HK$600</strong>
+								<span>課程優惠價</span>
+							</div>
+							<div className="about-stat">
+								<strong>觀塘</strong>
+								<span>課室位置</span>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<section className="section section-white" id="contact">
+					<div className="wrap contact-grid">
+						<div>
+							<span className="kicker">聯絡我們</span>
+							<h2 className="section-title">想報名，或者想知多啲？</h2>
+							<p className="section-lede">
+								直接 WhatsApp 我們最快。想夾時間、問課程內容、或者想了解 RedPen
+								都可以，我們會親自回覆。
+							</p>
+
+							<ul className="contact-list">
 								<li>
-									<MapPin size={20} strokeWidth={1.7} aria-hidden="true" />
-									G/F, 12 Eastern Street, Sai Ying Pun, Hong Kong
+									<MessageCircle size={20} aria-hidden="true" />
+									<div>
+										<strong>WhatsApp</strong>
+										<a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
+											9482 8587
+										</a>
+									</div>
 								</li>
 								<li>
-									<Phone size={20} strokeWidth={1.7} aria-hidden="true" />
-									+852 2555 0188
+									<MapPin size={20} aria-hidden="true" />
+									<div>
+										<strong>上課地點</strong>
+										<span>{VENUE}</span>
+									</div>
 								</li>
 								<li>
-									<Mail size={20} strokeWidth={1.7} aria-hidden="true" />
-									cellar@borhaz.hk
+									<Send size={20} aria-hidden="true" />
+									<div>
+										<strong>產品</strong>
+										<a href="https://redpen.idh.asia" target="_blank" rel="noreferrer">
+											redpen.idh.asia
+										</a>
+									</div>
 								</li>
 							</ul>
 						</div>
 
 						<div className="signup">
-							<h3>Get the shipment list first</h3>
+							<h3>收到下一班開課通知</h3>
 							<p>
-								One email per shipment. New arrivals, cellar tastings and nothing
-								else.
+								留低電郵，有新班或新產品我們會第一時間通知你。只會在有消息時寄出，不會濫發。
 							</p>
 							<form className="form" onSubmit={handleSubscribe}>
 								<input
@@ -431,23 +536,31 @@ function App() {
 									value={email}
 									onChange={(event) => setEmail(event.target.value)}
 									placeholder="you@example.com"
-									aria-label="Email address"
+									aria-label="電郵地址"
 									required
 								/>
-								<button className="btn btn-primary" type="submit" disabled={status === "sending"}>
-									{status === "sending" ? "Sending" : "Subscribe"}
+								<button
+									className="btn btn-primary"
+									type="submit"
+									disabled={status === "sending"}
+								>
+									{status === "sending" ? "傳送中" : "通知我"}
 								</button>
 							</form>
 							{status === "done" && (
 								<p className="form-msg" role="status">
-									Thanks. You are on the list for the next shipment.
+									已收到你的電郵，有新消息會通知你。
 								</p>
 							)}
 							{status === "error" && (
 								<p className="form-msg is-error" role="alert">
-									That email did not go through. Please try again.
+									電郵傳送失敗，請再試一次或直接 WhatsApp 我們。
 								</p>
 							)}
+							<p className="fps-box">
+								課程費用可用 <strong>FPS 轉數快 9482 8587</strong>
+								付款。付款後截圖 WhatsApp 傳送，我們會確認你的名額。
+							</p>
 						</div>
 					</div>
 				</section>
@@ -457,64 +570,69 @@ function App() {
 				<div className="wrap">
 					<div className="footer-grid">
 						<div className="footer-brand">
-							<a className="brand" href="#top" aria-label="BORHÁZ home">
+							<a className="brand" href="#top" aria-label="IDH 首頁">
 								<span className="brand-mark" aria-hidden="true">
-									<Wine size={20} strokeWidth={1.8} />
+									IDH
 								</span>
 								<span className="brand-text">
-									<span className="brand-name">BORHÁZ</span>
-									<span className="brand-sub">Wines of Hungary</span>
+									<span className="brand-name">IDH</span>
+									<span className="brand-sub">香港 AI 教育與產品</span>
 								</span>
 							</a>
 							<p>
-								Small-lot Hungarian wine imported to Hong Kong, bought at the estate
-								and shipped cold from Budapest.
+								香港 AI 教育與產品團隊。開辦實戰導向的 AI 工作坊，同時自家開發 AI
+								工具，最新產品是 RedPen。
 							</p>
 						</div>
 						<div className="footer-col">
-							<h4>Shop</h4>
+							<h4>課程</h4>
 							<ul>
 								<li>
-									<a href="#wines">Current collection</a>
+									<a href="#course">Manus AI 一日工作坊</a>
 								</li>
 								<li>
-									<a href="#regions">Regions</a>
+									<a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
+										WhatsApp 報名
+									</a>
 								</li>
 								<li>
-									<a href="#visit">Tastings</a>
+									<a href="#contact">開課通知</a>
 								</li>
 							</ul>
 						</div>
 						<div className="footer-col">
-							<h4>Contact</h4>
+							<h4>產品</h4>
 							<ul>
 								<li>
-									<a href="mailto:cellar@borhaz.hk">cellar@borhaz.hk</a>
+									<a href="https://redpen.idh.asia" target="_blank" rel="noreferrer">
+										RedPen 創作工作台
+									</a>
 								</li>
 								<li>
-									<a href="tel:+85225550188">+852 2555 0188</a>
+									<a href="#redpen">RedPen 功能</a>
 								</li>
-								<li>Sai Ying Pun, Hong Kong</li>
+								<li>
+									<a href="#about">關於 IDH</a>
+								</li>
 							</ul>
 						</div>
 					</div>
 
 					<p className="credits">
-						Photography from Wikimedia Commons: Jerzy Kociatkiewicz, Balázs Rafael,
-						takato marui, Yozh, Jacquesverlaeken, Igor Vizner and Elin, used under CC
-						BY-SA and CC BY licences.
+						本頁圖片：IDH Academy 課程海報、RedPen 產品截圖，以及 Wikimedia Commons
+						香港照片（Mk2010、ken93110，CC BY-SA／CC0）。
 					</p>
 					<div className="footer-bottom">
-						<span>© {new Date().getFullYear()} BORHÁZ. Please drink responsibly.</span>
-						<span>Hong Kong · Hungary</span>
+						<span>© {new Date().getFullYear()} IDH. 保留所有權利。</span>
+						<span>香港 · 觀塘</span>
 					</div>
 				</div>
 			</footer>
 
-			{added && (
+			{copied && (
 				<div className="toast" role="status">
 					<Check size={18} />
-					{added} added to your case
+					地址已複製
 				</div>
 			)}
 		</div>

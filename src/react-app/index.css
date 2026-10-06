@@ -1,27 +1,32 @@
 :root {
-	--ink: #1c1517;
-	--ink-soft: #574a4c;
-	--wine: #7b1e34;
-	--wine-deep: #4a0f1f;
-	--wine-soft: #f4e6e9;
-	--gold: #c99a4b;
-	--gold-soft: #ecd9ae;
-	--sage: #5c6b4a;
-	--paper: #fbf6ee;
-	--cream: #f1e7d6;
-	--line: rgba(28, 21, 23, 0.14);
+	--ink: #0f1729;
+	--ink-2: #1d2740;
+	--body: #4d5876;
+	--blue: #1b45c8;
+	--blue-dark: #14339a;
+	--blue-soft: #eaf0ff;
+	--sky: #2f9df4;
+	--amber: #f5a524;
+	--amber-soft: #fff3dd;
+	--redpen: #e11d48;
+	--green: #12805c;
+	--bg: #f5f7fb;
+	--surface: #ffffff;
+	--line: rgba(15, 23, 41, 0.12);
 	--white: #ffffff;
-	--font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
-	--font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+	--font-display: "Noto Serif TC", "Songti TC", "PingFang HK", serif;
+	--font-body: "Noto Sans HK", "PingFang HK", -apple-system, "Microsoft JhengHei",
+		sans-serif;
+	--shell: 1180px;
 	--radius: 8px;
-	--shell: 1200px;
 
 	color-scheme: light;
 	font-family: var(--font-body);
 	font-size: 16px;
-	line-height: 1.6;
+	line-height: 1.7;
 	color: var(--ink);
-	background-color: var(--paper);
+	background-color: var(--bg);
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
@@ -43,7 +48,8 @@ body {
 	margin: 0;
 	min-width: 320px;
 	min-height: 100vh;
-	background-color: var(--paper);
+	background-color: var(--bg);
+	word-break: break-word;
 }
 
 img {
@@ -68,8 +74,8 @@ h3,
 h4 {
 	margin: 0;
 	font-family: var(--font-display);
-	font-weight: 600;
-	line-height: 1.08;
+	font-weight: 700;
+	line-height: 1.25;
 	letter-spacing: 0;
 }
 
@@ -84,7 +90,7 @@ ul {
 }
 
 :focus-visible {
-	outline: 3px solid var(--gold);
+	outline: 3px solid var(--amber);
 	outline-offset: 3px;
 	border-radius: 4px;
 }
