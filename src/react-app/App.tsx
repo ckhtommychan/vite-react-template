@@ -15,6 +15,7 @@ import {
 	Globe,
 	GraduationCap,
 	Layers,
+	Mail,
 	MapPin,
 	Menu,
 	MessageCircle,
@@ -32,6 +33,7 @@ const WHATSAPP_NUMBER = "85294828587";
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
 	"你好，我想報名 Manus AI 一日工作坊，想了解下一班仲有冇位。",
 )}`;
+const EMAIL = "info@idh.asia";
 const VENUE = "九龍觀塘巧明街 95 號 世達中心 18 樓 F 室";
 // 中環課室預計即將開幕，現時所有課堂仍在觀塘課室進行
 const VENUE_CENTRAL = "香港中環（選址進行中，開幕後公布詳細地址）";
@@ -646,8 +648,8 @@ function App() {
 							<span className="kicker">聯絡我們</span>
 							<h2 className="section-title">想報名，或者想知多啲？</h2>
 							<p className="section-lede">
-								直接 WhatsApp 我們最快。想夾時間、問課程內容、或者想了解 RedPen
-								都可以，我們會親自回覆。
+								直接 WhatsApp 我們最快，也可以電郵到 {EMAIL}。想夾時間、問課程內容、或者想了解
+								RedPen 都可以，我們會親自回覆。
 							</p>
 
 							<ul className="contact-list">
@@ -658,6 +660,13 @@ function App() {
 										<a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
 											9482 8587
 										</a>
+									</div>
+								</li>
+								<li>
+									<Mail size={20} aria-hidden="true" />
+									<div>
+										<strong>電郵</strong>
+										<a href={`mailto:${EMAIL}`}>{EMAIL}</a>
 									</div>
 								</li>
 								<li>
@@ -790,7 +799,12 @@ function App() {
 					</p>
 					<div className="footer-bottom">
 						<span>© {new Date().getFullYear()} IDH. 保留所有權利。</span>
-						<span>香港 · 觀塘（中環即將開幕）</span>
+						<span>
+							<a className="footer-mail" href={`mailto:${EMAIL}`}>
+								{EMAIL}
+							</a>{" "}
+							· 香港 · 觀塘（中環即將開幕）
+						</span>
 					</div>
 				</div>
 			</footer>

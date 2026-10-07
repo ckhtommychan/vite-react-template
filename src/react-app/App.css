@@ -1190,6 +1190,15 @@
 	color: rgba(255, 255, 255, 0.5);
 }
 
+.footer-mail {
+	color: rgba(255, 255, 255, 0.74);
+}
+
+.footer-mail:hover {
+	color: var(--white);
+	text-decoration: underline;
+}
+
 /* ---------- toast ---------- */
 
 .toast {
