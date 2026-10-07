@@ -3,7 +3,9 @@ import type { FormEvent } from "react";
 import {
 	ArrowRight,
 	ArrowUpRight,
+	Building2,
 	Calendar,
+	Calculator,
 	Check,
 	ChevronDown,
 	Clock,
@@ -18,6 +20,7 @@ import {
 	MessageCircle,
 	MonitorSmartphone,
 	Palette,
+	Scale,
 	Send,
 	Sparkles,
 	Users,
@@ -30,6 +33,68 @@ const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponen
 	"你好，我想報名 Manus AI 一日工作坊，想了解下一班仲有冇位。",
 )}`;
 const VENUE = "九龍觀塘巧明街 95 號 世達中心 18 樓 F 室";
+// 中環課室預計即將開幕，現時所有課堂仍在觀塘課室進行
+const VENUE_CENTRAL = "香港中環（選址進行中，開幕後公布詳細地址）";
+
+const locations = [
+	{
+		icon: MapPin,
+		name: "觀塘課室",
+		area: "九龍東",
+		status: "現正開班",
+		tone: "open",
+		address: VENUE,
+		note: "現時所有課堂均在此進行。位於觀塘商貿區，鄰近觀塘港鐵站。",
+		image: "/images/classroom-kwun-tong.jpg",
+		imageAlt: "香港工商區街道與高樓，行人熙來攘往",
+	},
+	{
+		icon: Building2,
+		name: "中環課室",
+		area: "香港島",
+		status: "即將開幕",
+		tone: "new",
+		address: VENUE_CENTRAL,
+		note: "中環核心地段，港鐵中環站步行可達。預計即將開放，開幕後會在此公布地址與首班日期。",
+		image: "/images/classroom-central.jpg",
+		imageAlt: "香港島商業區夜景，電車路軌與高樓燈光",
+	},
+	{
+		icon: Sparkles,
+		name: "更多地點",
+		area: "籌備中",
+		status: "陸續開放",
+		tone: "soon",
+		address: "新界及港島其他地區的課室正在籌備中",
+		note: "想第一時間知道新課室與新班期，可以留低電郵或者直接 WhatsApp 我們。",
+		image: "/images/classroom-more.jpg",
+		imageAlt: "維多利亞港兩岸的城市天際線全景",
+	},
+];
+
+const upcomingCourses = [
+	{
+		icon: Calculator,
+		title: "AI+ 會計",
+		text: "用 AI 整理單據、對帳與報表，把重複工序自動化，將時間留給判斷。",
+		image: "/images/aiplus-accounting.jpg",
+		imageAlt: "桌面上的計算機、財務報表與筆記型電腦",
+	},
+	{
+		icon: Scale,
+		title: "AI+ 法律",
+		text: "合約條款比對、風險點標示與案例檢索，讓 AI 先做第一輪整理。",
+		image: "/images/aiplus-legal.jpg",
+		imageAlt: "手持天秤的正義女神雕像",
+	},
+	{
+		icon: Palette,
+		title: "AI+ 設計",
+		text: "由概念草圖到成稿素材，用 AI 加快提案與版本迭代。",
+		image: "/images/aiplus-design.jpg",
+		imageAlt: "設計師桌面上的色票、繪圖板與筆記型電腦",
+	},
+];
 
 const highlights = [
 	{
@@ -93,7 +158,9 @@ const redpenFeatures = [
 ];
 
 const navLinks = [
-	{ href: "#course", label: "AI 課程" },
+	{ href: "#course", label: "課程" },
+	{ href: "#upcoming", label: "AI+ 系列" },
+	{ href: "#locations", label: "課室地點" },
 	{ href: "#redpen", label: "RedPen" },
 	{ href: "#about", label: "關於 IDH" },
 	{ href: "#contact", label: "聯絡我們" },
@@ -309,7 +376,7 @@ function App() {
 										<MapPin size={19} aria-hidden="true" />
 										<div>
 											<dt>地點</dt>
-											<dd>{VENUE}</dd>
+											<dd>觀塘課室（中環課室即將開幕）</dd>
 										</div>
 									</div>
 								</dl>
@@ -334,8 +401,8 @@ function App() {
 									</button>
 								</div>
 								<p className="info-note">
-									名額有限，先到先得。請自備手提電腦參與課堂。付款可用 FPS 轉數快，付款後截圖
-									WhatsApp 傳送到 9482 8587。
+									名額有限，先到先得。中環課室即將開幕，屆時會增設中環班。請自備手提電腦參與課堂。付款可用 FPS
+									轉數快，付款後截圖 WhatsApp 傳送到 9482 8587。
 								</p>
 							</div>
 						</div>
@@ -368,6 +435,95 @@ function App() {
 									零基礎可參加。我們會由最基本開始，逐步帶你完成一個真實的工作任務。
 								</p>
 							</div>
+						</div>
+					</div>
+				</section>
+
+				<section className="section section-white" id="locations">
+					<div className="wrap">
+						<div className="section-head">
+							<span className="kicker">課室地點</span>
+							<h2 className="section-title">觀塘課室現正開班，中環課室即將開幕</h2>
+							<p className="section-lede">
+								現時所有課堂都在觀塘課室進行。中環課室預計即將開放，新界及港島其他地區的新課室亦在籌備當中，一有消息就會在這裡公布。
+							</p>
+						</div>
+
+						<div className="location-grid">
+							{locations.map((item) => (
+								<article className="location-card" key={item.name}>
+									<div className="location-cover">
+										<img
+											src={item.image}
+											alt={item.imageAlt}
+											width={1200}
+											height={750}
+											loading="lazy"
+										/>
+										<span className={`location-badge is-${item.tone}`}>
+											{item.status}
+										</span>
+									</div>
+									<div className="location-body">
+										<span className="location-icon" aria-hidden="true">
+											<item.icon size={20} />
+										</span>
+										<h3>{item.name}</h3>
+										<span className="location-area">{item.area}</span>
+										<p className="location-address">{item.address}</p>
+										<p className="location-note">{item.note}</p>
+									</div>
+								</article>
+							))}
+						</div>
+					</div>
+				</section>
+
+				<section className="section upcoming-section" id="upcoming">
+					<div className="wrap">
+						<div className="section-head">
+							<span className="kicker">AI+ 系列 · 即將推出</span>
+							<h2 className="section-title">把同一套 AI 實戰方法，帶到你的專業</h2>
+							<p className="section-lede">
+								除了 Manus AI 工作坊，我們正籌備一系列「AI+」課程，用你行業真實的工作場景做練習。以下主題的課綱與開班日期仍在籌備中。
+							</p>
+						</div>
+
+						<div className="upcoming-grid">
+							{upcomingCourses.map((course) => (
+								<article className="upcoming-card" key={course.title}>
+									<div className="upcoming-cover">
+										<img
+											src={course.image}
+											alt={course.imageAlt}
+											width={800}
+											height={500}
+											loading="lazy"
+										/>
+										<span className="upcoming-badge">即將推出</span>
+									</div>
+									<div className="upcoming-body">
+										<span className="upcoming-icon" aria-hidden="true">
+											<course.icon size={22} />
+										</span>
+										<h3>{course.title}</h3>
+										<p>{course.text}</p>
+									</div>
+								</article>
+							))}
+						</div>
+
+						<div className="waitlist-strip">
+							<div>
+								<h3>想優先收到開班通知？</h3>
+								<p>
+									留低電郵，或者直接 WhatsApp 我們講低你有興趣的主題，新班一出就第一時間通知你。
+								</p>
+							</div>
+							<a className="btn btn-outline" href="#contact">
+								開課通知
+								<ArrowRight size={17} />
+							</a>
 						</div>
 					</div>
 				</section>
@@ -456,7 +612,7 @@ function App() {
 							</span>
 							<h2>香港團隊，做 AI 教育，也做自己的產品</h2>
 							<p>
-								我們在觀塘有一個小課室，也有一隊開發團隊。除了開班教 AI，我們日常就用同一套
+								我們在觀塘有課室（中環課室即將開幕），也有一隊開發團隊。除了開班教 AI，我們日常就用同一套
 								AI 流程做自己的產品，所以課堂上教的，都是我們自己在用的做法。
 							</p>
 							<p>
@@ -478,7 +634,7 @@ function App() {
 							</div>
 							<div className="about-stat">
 								<strong>觀塘</strong>
-								<span>課室位置</span>
+								<span>課室現正開班</span>
 							</div>
 						</div>
 					</div>
@@ -508,7 +664,10 @@ function App() {
 									<MapPin size={20} aria-hidden="true" />
 									<div>
 										<strong>上課地點</strong>
-										<span>{VENUE}</span>
+										<div className="contact-venues">
+											<span>觀塘課室：{VENUE}</span>
+											<span>中環課室：即將開幕</span>
+										</div>
 									</div>
 								</li>
 								<li>
@@ -591,6 +750,12 @@ function App() {
 									<a href="#course">Manus AI 一日工作坊</a>
 								</li>
 								<li>
+									<a href="#upcoming">AI+ 系列（即將推出）</a>
+								</li>
+								<li>
+									<a href="#locations">課室地點：觀塘（中環即將開幕）</a>
+								</li>
+								<li>
 									<a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
 										WhatsApp 報名
 									</a>
@@ -619,12 +784,13 @@ function App() {
 					</div>
 
 					<p className="credits">
-						本頁圖片：IDH Academy 課程海報、RedPen 產品截圖，以及 Wikimedia Commons
-						香港照片（Mk2010、ken93110，CC BY-SA／CC0）。
+						本頁圖片：IDH Academy 課程海報、RedPen 產品截圖、Unsplash 課程與香港照片（Jakub
+						Żerdzicki、Tingey Injury Law Firm、Theme Photos、Lau For Ning、Lai Man Nung、Nataliia
+						Miazina），以及 Wikimedia Commons 香港照片（Mk2010、ken93110，CC BY-SA／CC0）。
 					</p>
 					<div className="footer-bottom">
 						<span>© {new Date().getFullYear()} IDH. 保留所有權利。</span>
-						<span>香港 · 觀塘</span>
+						<span>香港 · 觀塘（中環即將開幕）</span>
 					</div>
 				</div>
 			</footer>
