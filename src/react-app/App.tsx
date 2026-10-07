@@ -273,8 +273,8 @@ function App() {
 				<section className="hero">
 					<div className="hero-media">
 						<img
-							src="/images/hero-kwun-tong.jpg"
-							alt="觀塘海濱夜景，鄰近 IDH 課室所在的觀塘商貿區"
+							src="/images/hero-victoria-harbour.jpg"
+							alt="維多利亞港夜景：紅色帆船與香港島天際線"
 						/>
 					</div>
 					<div className="wrap hero-inner">
@@ -605,7 +605,7 @@ function App() {
 
 				<section className="about" id="about">
 					<div className="about-media">
-						<img src="/images/hong-kong-harbour.jpg" alt="香港維多利亞港夜景" />
+						<img src="/images/about-hong-kong-skyline.jpg" alt="香港島天際線夜景，背後為太平山" />
 					</div>
 					<div className="wrap about-grid">
 						<div>
@@ -792,11 +792,6 @@ function App() {
 						</div>
 					</div>
 
-					<p className="credits">
-						本頁圖片：IDH Academy 課程海報、RedPen 產品截圖、Unsplash 課程與香港照片（Jakub
-						Żerdzicki、Tingey Injury Law Firm、Theme Photos、Lau For Ning、Lai Man Nung、Nataliia
-						Miazina），以及 Wikimedia Commons 香港照片（Mk2010、ken93110，CC BY-SA／CC0）。
-					</p>
 					<div className="footer-bottom">
 						<span>© {new Date().getFullYear()} IDH. 保留所有權利。</span>
 						<span>
