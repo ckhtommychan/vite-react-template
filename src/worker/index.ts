@@ -1,5 +1,12 @@
 import { Hono } from "hono";
-const app = new Hono<{ Bindings: Env }>();
+
+type WorkerEnv = Env & {
+	ASSETS: {
+		fetch: typeof fetch;
+	};
+};
+
+const app = new Hono<{ Bindings: WorkerEnv }>();
 
 app.get("/api/", (c) => c.json({ name: "IDH", projects: ["redpen.idh.asia"] }));
 
@@ -29,6 +36,18 @@ app.post("/api/subscribe", async (c) => {
 		}),
 	);
 	return c.json({ ok: true });
+});
+
+app.get("*", async (c) => {
+	const { pathname } = new URL(c.req.url);
+	const isApiRoute = pathname === "/api" || pathname.startsWith("/api/");
+	const isAssetRequest = /\.[a-z0-9]+$/i.test(pathname);
+
+	if (isApiRoute || isAssetRequest) {
+		return c.notFound();
+	}
+
+	return c.env.ASSETS.fetch(new URL("/index.html", c.req.url));
 });
 
 export default app;
