@@ -40,6 +40,8 @@
 		"check": "tsc && vite build && wrangler deploy --dry-run",
 		"deploy": "wrangler deploy",
 		"dev": "vite",
+		"blog:generate": "node scripts/generate-blog-post.mjs",
+		"blog:dry-run": "node scripts/generate-blog-post.mjs --dry-run",
 		"lint": "eslint .",
 		"preview": "npm run build && vite preview"
 	},

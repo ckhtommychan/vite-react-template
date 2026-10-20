@@ -27,7 +27,9 @@ import {
 	Users,
 	X,
 } from "lucide-react";
+import BlogPage from "./BlogPage";
 import LegalPage, { type LegalPageKind } from "./LegalPage";
+import { latestPost } from "./blogPosts";
 import "./App.css";
 
 const WHATSAPP_NUMBER = "85294828587";
@@ -166,6 +168,7 @@ const navLinks = [
 	{ href: "#upcoming", label: "AI+ 系列" },
 	{ href: "#locations", label: "課室地點" },
 	{ href: "#redpen", label: "RedPen" },
+	{ href: "/blog", label: "文章" },
 	{ href: "#about", label: "關於 IDH" },
 	{ href: "#contact", label: "聯絡我們" },
 ];
@@ -179,6 +182,14 @@ const legalRoutes: Record<string, LegalPageKind> = {
 	"/refund-policy/": "refund",
 };
 
+function decodePathSegment(value: string) {
+	try {
+		return decodeURIComponent(value);
+	} catch {
+		return value;
+	}
+}
+
 function App() {
 	const [scrolled, setScrolled] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -186,6 +197,7 @@ function App() {
 	const [email, setEmail] = useState("");
 	const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
 	const legalPage = legalRoutes[window.location.pathname];
+	const blogMatch = window.location.pathname.match(/^\/blog(?:\/([^/]+))?\/?$/);
 
 	useEffect(() => {
 		const onScroll = () => setScrolled(window.scrollY > 24);
@@ -238,6 +250,16 @@ function App() {
 				kind={legalPage}
 				companyName={COMPANY_NAME}
 				companyAddress={VENUE}
+				email={EMAIL}
+				whatsappLink={WHATSAPP_LINK}
+			/>
+		);
+	}
+
+	if (blogMatch) {
+		return (
+			<BlogPage
+				slug={blogMatch[1] ? decodePathSegment(blogMatch[1]) : undefined}
 				email={EMAIL}
 				whatsappLink={WHATSAPP_LINK}
 			/>
@@ -635,6 +657,56 @@ function App() {
 					</div>
 				</section>
 
+				<section className="section journal-section" id="journal">
+					<div className="wrap">
+						<div className="journal-head">
+							<div>
+								<span className="kicker">IDH Journal · AI 實戰筆記</span>
+								<h2 className="section-title">睇我們點樣把 AI 用進工作</h2>
+								<p className="section-lede">
+									課堂以外，我們也會把實際用過的方法寫下來。由交付物開始，拆解可以重複使用的 AI 工作流。
+								</p>
+							</div>
+							<a className="btn btn-outline" href="/blog">
+								所有文章
+								<ArrowRight size={17} />
+							</a>
+						</div>
+
+						<article className="journal-feature">
+							<a className="journal-cover" href={`/blog/${latestPost.slug}`}>
+								<img
+									src={latestPost.coverImage}
+									alt={latestPost.coverAlt}
+									width={1200}
+									height={750}
+								/>
+							</a>
+							<div className="journal-body">
+								<div className="post-meta">
+									<span className="post-tag">{latestPost.category}</span>
+									<span>
+										<Calendar size={14} aria-hidden="true" />
+										{latestPost.dateLabel}
+									</span>
+									<span>
+										<Clock size={14} aria-hidden="true" />
+										{latestPost.readingTime}
+									</span>
+								</div>
+								<h3>
+									<a href={`/blog/${latestPost.slug}`}>{latestPost.title}</a>
+								</h3>
+								<p>{latestPost.excerpt}</p>
+								<a className="post-link" href={`/blog/${latestPost.slug}`}>
+									閱讀全文
+									<ArrowRight size={17} />
+								</a>
+							</div>
+						</article>
+					</div>
+				</section>
+
 				<section className="about" id="about">
 					<div className="about-media">
 						<img src="/images/about-hong-kong-skyline.jpg" alt="香港島天際線夜景，背後為太平山" />
@@ -826,6 +898,9 @@ function App() {
 								</li>
 								<li>
 									<a href="#about">關於 IDH</a>
+								</li>
+								<li>
+									<a href="/blog">AI 實戰文章</a>
 								</li>
 							</ul>
 						</div>

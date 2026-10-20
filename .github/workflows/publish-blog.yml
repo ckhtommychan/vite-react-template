@@ -1,0 +1,56 @@
+name: Publish IDH Journal
+
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "Optional topic override (Chinese or English)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: idh-journal-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate article
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          BLOG_TOPIC: ${{ inputs.topic }}
+        run: node scripts/generate-blog-post.mjs
+
+      - name: Validate site build
+        run: npm run build
+
+      - name: Commit and push
+        run: |
+          git config user.name "IDH Journal Bot"
+          git config user.email "bot@idh.asia"
+          git add content/posts content/editorial-log.json
+          if git diff --cached --quiet; then
+            echo "No new post generated."
+            exit 0
+          fi
+          git commit -m "content: auto-publish IDH Journal post"
+          git push
