@@ -48,8 +48,9 @@ Push 到 `main` 亦會觸發 Cloudflare Workers Builds，自動建置並部署
 ## API
 
 - `GET /api/` 回傳服務狀態與項目清單
-- `POST /api/subscribe` 接受 `{ "email": "you@example.com" }`，驗證後回傳
-  `{ "ok": true }`
+- `POST /api/subscribe` 接受
+  `{ "email": "you@example.com", "marketingConsent": true }`，驗證後回傳
+  `{ "ok": true }`。如未有明確同意，API 會回傳 `consent_required`。
 
 訂閱處理目前只寫入 Worker log。正式使用前請接上郵件服務商（Mailchimp、Klaviyo、
 Resend 等）。

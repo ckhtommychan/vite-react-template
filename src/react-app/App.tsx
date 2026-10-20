@@ -27,6 +27,7 @@ import {
 	Users,
 	X,
 } from "lucide-react";
+import LegalPage, { type LegalPageKind } from "./LegalPage";
 import "./App.css";
 
 const WHATSAPP_NUMBER = "85294828587";
@@ -35,6 +36,7 @@ const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponen
 )}`;
 const EMAIL = "info@idh.asia";
 const VENUE = "九龍觀塘巧明街 95 號 世達中心 18 樓 F 室";
+const COMPANY_NAME = "Alliance Asia Hong Kong Limited";
 // 中環課室預計即將開幕，現時所有課堂仍在觀塘課室進行
 const VENUE_CENTRAL = "香港中環（選址進行中，開幕後公布詳細地址）";
 
@@ -168,12 +170,22 @@ const navLinks = [
 	{ href: "#contact", label: "聯絡我們" },
 ];
 
+const legalRoutes: Record<string, LegalPageKind> = {
+	"/terms": "terms",
+	"/privacy-policy": "privacy",
+	"/refund-policy": "refund",
+	"/terms/": "terms",
+	"/privacy-policy/": "privacy",
+	"/refund-policy/": "refund",
+};
+
 function App() {
 	const [scrolled, setScrolled] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [email, setEmail] = useState("");
 	const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+	const legalPage = legalRoutes[window.location.pathname];
 
 	useEffect(() => {
 		const onScroll = () => setScrolled(window.scrollY > 24);
@@ -201,12 +213,16 @@ function App() {
 		event.preventDefault();
 		if (!email.trim()) return;
 
+		const marketingConsent =
+			new FormData(event.currentTarget).get("consent") === "on";
+		if (!marketingConsent) return;
+
 		setStatus("sending");
 		try {
 			const response = await fetch("/api/subscribe", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ email }),
+				body: JSON.stringify({ email, marketingConsent }),
 			});
 			if (!response.ok) throw new Error("Subscription failed");
 			setStatus("done");
@@ -214,6 +230,18 @@ function App() {
 		} catch {
 			setStatus("error");
 		}
+	}
+
+	if (legalPage) {
+		return (
+			<LegalPage
+				kind={legalPage}
+				companyName={COMPANY_NAME}
+				companyAddress={VENUE}
+				email={EMAIL}
+				whatsappLink={WHATSAPP_LINK}
+			/>
+		);
 	}
 
 	return (
@@ -405,6 +433,10 @@ function App() {
 								<p className="info-note">
 									名額有限，先到先得。中環課室即將開幕，屆時會增設中環班。請自備手提電腦參與課堂。付款可用 FPS
 									轉數快，付款後截圖 WhatsApp 傳送到 9482 8587。
+								</p>
+								<p className="policy-note">
+									完成付款即表示你同意<a href="/terms">服務條款</a>及<a href="/refund-policy">退款政策</a>
+									；個人資料處理方式請參閱<a href="/privacy-policy">隱私政策</a>。
 								</p>
 							</div>
 						</div>
@@ -707,6 +739,13 @@ function App() {
 									aria-label="電郵地址"
 									required
 								/>
+								<label className="consent">
+									<input type="checkbox" name="consent" required />
+									<span>
+										我同意 IDH 使用我的電郵地址，向我發送課程開班、新產品及相關推廣資訊。我可隨時取消訂閱，詳情見
+										<a href="/privacy-policy">隱私政策</a>。
+									</span>
+								</label>
 								<button
 									className="btn btn-primary"
 									type="submit"
@@ -790,10 +829,29 @@ function App() {
 								</li>
 							</ul>
 						</div>
+						<div className="footer-col">
+							<h4>政策</h4>
+							<ul>
+								<li>
+									<a href="/terms">服務條款</a>
+								</li>
+								<li>
+									<a href="/privacy-policy">隱私政策</a>
+								</li>
+								<li>
+									<a href="/refund-policy">退款政策</a>
+								</li>
+								<li>
+									<a href={`mailto:${EMAIL}`}>聯絡我們</a>
+								</li>
+							</ul>
+						</div>
 					</div>
 
 					<div className="footer-bottom">
-						<span>© {new Date().getFullYear()} IDH. 保留所有權利。</span>
+						<span>
+							© {new Date().getFullYear()} {COMPANY_NAME}. 保留所有權利。
+						</span>
 						<span>
 							<a className="footer-mail" href={`mailto:${EMAIL}`}>
 								{EMAIL}
