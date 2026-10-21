@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-21",
+  "title": "WorkBuddy 接入企業微信：20 分鐘把供應商對話變成交貨清單",
+  "slug": "workbuddy-wecom-supplier-recap",
+  "category": "AI 工作流",
+  "excerpt": "WorkBuddy 正式接入企業微信，香港中小企可以叫 AI 喺群組度讀供應商對話、整理成交貨清單。用 20 分鐘試一次，把散亂訊息變成可核對嘅待辦。",
+  "readingTime": "5 分鐘閱讀",
+  "coverImage": "/images/classroom-kwun-tong.jpg",
+  "coverAlt": "香港工商區街道與高樓，行人熙來攘往",
+  "generatedByAI": true,
+  "sources": [
+    {
+      "title": "Tencent Integrates AI Agent WorkBuddy With Enterprise App",
+      "url": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQaGhFeEF0VHZwbTJrZ0gyd3VjVE10V2tDeDktMVRkbjU1aEV2bHNpS1hSNVE5N3hoc1h4QktPTHlhQ29kNjRKdmkxU1hlY09QQTA4NkFJRmtVR0FMWUFWSEtqT1NNY0lJek9sN0x6ZUZ0WXl2Ml9pQm5WYlFRTTBGTGhTVTZ0TEFwMDc0M0YzRTZpZlVtRE1lV0tDV0lfY1hhX2RkaEs2VDhkTUNsRTU1UDJ3?oc=5"
+    },
+    {
+      "title": "Understanding WorkBuddy WeCom Integration: Key Context, Setup & Core Functional Overview",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9LWjFFZ2JHRF9OTVl6a0hzZDFhbzRrOUtrVHRGd3pFQWRJczZFc3U3TUxBRXU3LV85R1BHRlpMODlZbWxCemRUdWpfXzR2TWt6bTZB?oc=5"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "lede",
+      "text": "香港好多中小企，同內地供應商或者客戶嘅日常，幾乎日日都係喺微信或企業微信（WeCom）入面發生。報價、改單、交期、付款、退貨，全部散落喺一條又一條群組訊息入面，想搵返個重點，就要逐段慢慢爬。"
+    },
+    {
+      "type": "p",
+      "text": "上個星期，Tencent 嘅 AI 代理 WorkBuddy 加大咗同企業微信嘅整合。換句話講，你唔使再自己一個一個群組去爬訊息：可以叫 AI 幫你讀對話、抽出重點、整理成一份交貨清單或者待辦，再直接回傳返個群組。"
+    },
+    {
+      "type": "p",
+      "text": "對香港中小企嚟講，呢個意義特別大。我哋習慣咗用微信同內地夥伴溝通，但市面上好多 AI 工具都係獨立 App，要你 copy 嚟 copy 去。WorkBuddy 想做到嘅，係喺你本來就用緊嘅工作場景入面直接落手。"
+    },
+    {
+      "type": "h2",
+      "id": "section-1",
+      "text": "佢真正改變咗咩"
+    },
+    {
+      "type": "p",
+      "text": "以前嘅做法係人肉處理：睇訊息、開記事本、自己打字整理，再決定邊個要跟進。而家 WorkBuddy 可以喺群組入面被提及，讀取一段對話之後，幫你整理成有結構嘅內容，例如訂單摘要、交期清單或者下一步待辦，再將結果發返去群組或者連去文件。"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "跨 App 工作：Tencent 官方講法係「你喺六個 App 之間工作，你嘅 AI 都應該一樣」，可以喺你原有嘅工具入面運作。",
+        "企業微信整合：可以加入群組、接收任務，並把輸出直接回傳 WeCom。",
+        "多模型切換：支援切換唔同底層模型，並兼容 OpenClaw 生態。",
+        "安全中心：報道提到提供 OS／API 層沙盒、可還原嘅檔案刪除同版本回滾。"
+      ]
+    },
+    {
+      "type": "h2",
+      "id": "section-2",
+      "text": "20 分鐘 quick win：把供應商對話變成交貨清單"
+    },
+    {
+      "type": "p",
+      "text": "假設你啱啱同一個內地供應商喺企業微信群入面傾完一批貨：改咗數量、改咗交期、多咗一個特別包裝要求。與其自己抄，不如照以下步驟做一次。"
+    },
+    {
+      "type": "checklist",
+      "items": [
+        "喺企業微信開一個 WorkBuddy 對話，或者喺群組入面 @ 佢，確認佢已經可以讀取你哋嘅訊息。",
+        "揀一段最亂、最需要整理嘅對話範圍（例如最近兩三日嘅對單），唔好一次過俾晒成個月。",
+        "貼上下方嘅 prompt，要求佢只輸出重點，唔好自行加料。",
+        "收到結果後，逐項對返原訊息核對數量、日期同金額。",
+        "冇問題之後，叫佢整理成一段可以回傳群組嘅簡短訊息，或者直接複製去你嘅落單文件。"
+      ]
+    },
+    {
+      "type": "prompt",
+      "label": "指令範例",
+      "text": "你係我公司嘅訂單助理。以下係我同供應商嘅對話紀錄。請幫我整理成一份「交貨清單」，格式如下：\n- 產品／SKU\n- 最新確認數量\n- 最新確認交期\n- 特別要求（如有）\n- 需要我回覆或確認嘅事項\n規則：\n1. 只用對話入面出現過嘅資料，唔好自行補數或估價。\n2. 唔確定嘅地方，標明「待確認」。\n3. 用繁體中文，語氣直接。\n對話紀錄：\n[喺度貼上你揀好嗰段對話]"
+    },
+    {
+      "type": "p",
+      "text": "收到清單之後，記得先由人核對。AI 擅長整理，但唔擅長知道邊個數字先係真。尤其係金額同交期，一定要自己對返原訊息。"
+    },
+    {
+      "type": "h2",
+      "id": "section-3",
+      "text": "限制同風險"
+    },
+    {
+      "type": "p",
+      "text": "WorkBuddy 而家嘅功能、收費同香港地區可用程度，會隨版本更新，實際介面同權限可能同報道有出入，未用過嘅人最好先喺公司內部小範圍試。"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "AI 會睇漏或者理解錯：對話越口語、越跳，出錯機會越高，整理結果一定要人核。",
+        "私隱係最大考量：唔好把客戶名單、合約、個人資料或者未公開財務數字貼入去。",
+        "涉及招標價、客戶私隱或者有合約約束嘅資料，唔應該交俾一個未經公司批准嘅 AI。"
+      ]
+    },
+    {
+      "type": "note",
+      "text": "香港企業處理個人資料，要符合《個人資料（私隱）條例》要求。用 AI 處理對話之前，先確認公司政策、帳戶權限，以及資料會唔會交去第三方服務；必要時先做去識別化，或者只提供摘要。"
+    },
+    {
+      "type": "p",
+      "text": "同時，AI 會讀取你嘅對話內容，意味住敏感商業資料有機會離開你自己嘅系統。涉及機密嘅對單，寧願用返內部流程。"
+    },
+    {
+      "type": "h2",
+      "id": "section-4",
+      "text": "咩情況唔值得用"
+    },
+    {
+      "type": "p",
+      "text": "如果只係一句「幾時出貨？」咁簡單，開 AI 反而慢。WorkBuddy 嘅完整自動化流程、多工具串接同進階 prompt chain，涉及更多設定同判斷，呢度唔展開。今日先由一個單一嘅 quick win 開始：揀一個你最煩嘅供應商群，20 分鐘內做一次整理，你就會感受到個分別。"
+    }
+  ]
+}
