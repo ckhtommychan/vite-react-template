@@ -10,6 +10,7 @@ import {
 	ChevronDown,
 	Clock,
 	Copy,
+	CreditCard,
 	Download,
 	FileText,
 	Globe,
@@ -29,6 +30,10 @@ import {
 } from "lucide-react";
 import BlogPage from "./BlogPage";
 import LegalPage, { type LegalPageKind } from "./LegalPage";
+import AccountPage from "./AccountPage";
+import CoursePage from "./CoursePage";
+import PricingPage from "./PricingPage";
+import UpdatesPage from "./UpdatesPage";
 import { latestPost } from "./blogPosts";
 import "./App.css";
 
@@ -127,7 +132,7 @@ const highlights = [
 
 const courseDetails = [
 	{ icon: Calendar, label: "開班日期", value: "10月6、20、27日（星期二）" },
-	{ icon: Clock, label: "時間", value: "下午 3:00 – 5:00" },
+	{ icon: Clock, label: "時間", value: "下午 3:00 至 5:00" },
 	{ icon: Users, label: "名額", value: "小班教學（限額 6 人）" },
 	{ icon: GraduationCap, label: "講者", value: "Peter So、Aiden Lam" },
 ];
@@ -160,7 +165,7 @@ const redpenFeatures = [
 	{ icon: Sparkles, text: "AI 文案撰寫" },
 	{ icon: Globe, text: "支援 10 種輸出語言" },
 	{ icon: Layers, text: "完成後一鍵打包下載" },
-	{ icon: Download, text: "內建點數制，用量一目了然" },
+	{ icon: Download, text: "月費方案與用量一目了然" },
 ];
 
 const navLinks = [
@@ -196,7 +201,8 @@ function App() {
 	const [copied, setCopied] = useState(false);
 	const [email, setEmail] = useState("");
 	const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
-	const legalPage = legalRoutes[window.location.pathname];
+	const pathname = window.location.pathname.replace(/\/+$/, "") || "/";
+	const legalPage = legalRoutes[pathname];
 	const blogMatch = window.location.pathname.match(/^\/blog(?:\/([^/]+))?\/?$/);
 
 	useEffect(() => {
@@ -242,6 +248,22 @@ function App() {
 		} catch {
 			setStatus("error");
 		}
+	}
+
+	if (pathname === "/pricing") {
+		return <PricingPage />;
+	}
+
+	if (pathname === "/account") {
+		return <AccountPage />;
+	}
+
+	if (pathname === "/course") {
+		return <CoursePage />;
+	}
+
+	if (pathname === "/updates") {
+		return <UpdatesPage />;
 	}
 
 	if (legalPage) {
@@ -291,12 +313,10 @@ function App() {
 					<div className="header-actions">
 						<a
 							className="btn btn-primary btn-sm"
-							href={WHATSAPP_LINK}
-							target="_blank"
-							rel="noreferrer"
+							href="/pricing"
 						>
-							<MessageCircle size={17} />
-							立即報名
+							<Calculator size={17} />
+							項目方案
 						</a>
 						<button
 							type="button"
@@ -341,12 +361,10 @@ function App() {
 						<div className="hero-actions">
 							<a
 								className="btn btn-amber"
-								href={WHATSAPP_LINK}
-								target="_blank"
-								rel="noreferrer"
+								href="/course"
 							>
-								<MessageCircle size={18} />
-								報名 Manus AI 工作坊
+								<CreditCard size={18} />
+								報名及付款
 							</a>
 							<a className="btn btn-ghost" href="#redpen">
 								了解 RedPen
@@ -440,12 +458,19 @@ function App() {
 									</span>
 									<a
 										className="btn btn-primary"
+										href="/course"
+									>
+										<CreditCard size={18} />
+										網上報名及付款
+									</a>
+									<a
+										className="btn btn-outline"
 										href={WHATSAPP_LINK}
 										target="_blank"
 										rel="noreferrer"
 									>
 										<MessageCircle size={18} />
-										WhatsApp 報名
+										WhatsApp 查詢
 									</a>
 									<button type="button" className="btn btn-outline" onClick={copyVenue}>
 										<Copy size={17} />
@@ -454,7 +479,7 @@ function App() {
 								</div>
 								<p className="info-note">
 									名額有限，先到先得。中環課室即將開幕，屆時會增設中環班。請自備手提電腦參與課堂。付款可用 FPS
-									轉數快，付款後截圖 WhatsApp 傳送到 9482 8587。
+									轉數快；網上報名後會取得付款參考編號，可即時上載收據。
 								</p>
 								<p className="policy-note">
 									完成付款即表示你同意<a href="/terms">服務條款</a>及<a href="/refund-policy">退款政策</a>
@@ -838,7 +863,7 @@ function App() {
 							)}
 							<p className="fps-box">
 								課程費用可用 <strong>FPS 轉數快 9482 8587</strong>
-								付款。付款後截圖 WhatsApp 傳送，我們會確認你的名額。
+								付款。請先<a href="/course">網上報名</a>取得付款參考編號，再上載收據，我們會確認你的名額。
 							</p>
 						</div>
 					</div>
@@ -876,9 +901,7 @@ function App() {
 									<a href="#locations">課室地點：觀塘（中環即將開幕）</a>
 								</li>
 								<li>
-									<a href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-										WhatsApp 報名
-									</a>
+									<a href="/course">網上報名及付款</a>
 								</li>
 								<li>
 									<a href="#contact">開課通知</a>
@@ -895,6 +918,15 @@ function App() {
 								</li>
 								<li>
 									<a href="#redpen">RedPen 功能</a>
+								</li>
+								<li>
+									<a href="/pricing">方案與價格</a>
+								</li>
+								<li>
+									<a href="/updates">服務更新</a>
+								</li>
+								<li>
+									<a href="/account">我的帳戶</a>
 								</li>
 								<li>
 									<a href="#about">關於 IDH</a>

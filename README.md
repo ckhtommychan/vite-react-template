@@ -5,7 +5,7 @@ AI 實戰課程（IDH Academy）與自家開發的產品。
 
 ## 內容
 
-- **AI 教育**：Manus AI 一日工作坊，小班實戰、限額 6 人、優惠價 HK$600
+- **AI 教育**：Manus AI 一日工作坊，小班實戰、限額 6 人、優惠價 HK$600；可於 `/course` 以 FPS 網上報名及上載收據
 - **最新產品**：RedPen，AI 圖文創作工作台（https://redpen.idh.asia）
 - **IDH Journal**：AI 實戰筆記與工作流拆解（https://idh.asia/blog）
 - **聯絡**：WhatsApp 9482 8587、觀塘課室地址
@@ -24,6 +24,7 @@ AI 實戰課程（IDH Academy）與自家開發的產品。
 | 路徑 | 用途 |
 | --- | --- |
 | `src/react-app/App.tsx` | 頁面區塊、文案與互動 |
+| `src/react-app/CoursePage.tsx` | `/course` 課程報名、FPS 付款及收據上載 |
 | `src/react-app/App.css`、`src/react-app/index.css` | 樣式與設計變數 |
 | `src/react-app/BlogPage.tsx` | `/blog` 文章列表與文章頁 |
 | `src/react-app/blogPosts.tsx` | 文章資料、目錄與正文內容 |
@@ -64,8 +65,9 @@ Resend 等）。
 
 ## 更新課程資料
 
-課程日期、價錢、地點等內容集中在 `src/react-app/App.tsx` 的
-`courseDetails`、`usages`、`audiences` 與 `VENUE` 常數，改一處就會同步更新整頁。
+課程日期、價錢、地點等內容主要在 `src/react-app/App.tsx` 的
+`courseDetails`、`usages`、`audiences` 與 `VENUE` 常數；報名頁的課程摘要位於
+`src/react-app/CoursePage.tsx`，改課程資料時請一併更新兩處。
 
 ## 新增文章
 
