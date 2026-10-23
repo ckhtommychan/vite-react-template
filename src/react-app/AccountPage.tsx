@@ -9,6 +9,7 @@ import {
 	watchAuth,
 } from "./firebase";
 import {
+	cancelOrder,
 	formatDate,
 	formatDateTime,
 	formatHkd,
@@ -73,6 +74,7 @@ export default function AccountPage() {
 	const [notice, setNotice] = useState<string | null>(null);
 	const [uploadingId, setUploadingId] = useState<string | null>(null);
 	const [stripeBusyId, setStripeBusyId] = useState<string | null>(null);
+	const [cancelBusyId, setCancelBusyId] = useState<string | null>(null);
 	const syncedSession = useRef<string | null>(null);
 
 	useEffect(() => {
@@ -253,6 +255,37 @@ export default function AccountPage() {
 			setError(err instanceof Error ? err.message : "未能改用 FPS");
 		} finally {
 			setStripeBusyId(null);
+		}
+	}
+
+	function canCancelPending(order: Order): boolean {
+		if (order.status !== "pending_payment") return false;
+		const stripeStatus = order.stripe_payment_status ?? "";
+		if (["paid", "paid_activation_failed", "processing"].includes(stripeStatus)) return false;
+		return true;
+	}
+
+	async function handleCancelOrder(order: Order) {
+		if (!user || !canCancelPending(order)) return;
+		if (!window.confirm("確定取消此待付款訂單？取消後如需購買請重新下單。")) return;
+		setCancelBusyId(order.id);
+		setError(null);
+		try {
+			const token = await user.getIdToken();
+			const result = await cancelOrder(token, order.id);
+			setData((previous) =>
+				previous
+					? {
+							...previous,
+							orders: previous.orders.map((item) => (item.id === order.id ? result.order : item)),
+						}
+					: previous,
+			);
+			setNotice("訂單已取消。");
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "未能取消訂單");
+		} finally {
+			setCancelBusyId(null);
 		}
 	}
 
@@ -485,6 +518,11 @@ export default function AccountPage() {
 										{data.orders.map((order) => {
 											const isStripeOrder = order.payment_method === "stripe" && order.status !== "approved";
 											const stripeStatus = order.stripe_payment_status ?? "requires_payment";
+											const showCancel = canCancelPending(order);
+											const actionBusy =
+												stripeBusyId === order.id ||
+												uploadingId === order.id ||
+												cancelBusyId === order.id;
 											return (
 											<article key={order.id} className="order-item">
 												<div className="order-item-top">
@@ -503,7 +541,7 @@ export default function AccountPage() {
 													{order.payment_method === "stripe" ? "信用卡（Stripe）" : "FPS"} ·{" "}
 													{formatDateTime(order.created_at)}
 												</p>
-												{order.rejection_reason && (
+												{order.rejection_reason && order.status === "rejected" && (
 													<p className="notice is-error">拒絕原因：{order.rejection_reason}</p>
 												)}
 												{(order.status === "pending_payment" || order.status === "rejected") && (
@@ -525,7 +563,7 @@ export default function AccountPage() {
 																	type="button"
 																	className="btn btn-primary btn-sm"
 																	disabled={
-																		stripeBusyId === order.id ||
+																		actionBusy ||
 																		stripeStatus === "processing" ||
 																		stripeStatus === "paid_activation_failed"
 																	}
@@ -540,16 +578,26 @@ export default function AccountPage() {
 																<button
 																	type="button"
 																	className="btn btn-outline btn-sm"
-																	disabled={stripeBusyId === order.id || stripeStatus === "processing"}
+																	disabled={actionBusy || stripeStatus === "processing"}
 																	onClick={() => void chooseFps(order)}
 																>
 																	改用 FPS
 																</button>
+																{showCancel && (
+																	<button
+																		type="button"
+																		className="btn btn-outline btn-sm"
+																		disabled={actionBusy}
+																		onClick={() => void handleCancelOrder(order)}
+																	>
+																		{cancelBusyId === order.id ? "取消中…" : "取消訂單"}
+																	</button>
+																)}
 															</div>
 														</>
 													) : (
 														<>
-															{plans && (
+															{plans && order.status === "pending_payment" && (
 																<p className="order-meta">
 																	請以 FPS {plans.payment.fps_number} 轉帳，並在備註填上付款參考。
 																</p>
@@ -560,7 +608,7 @@ export default function AccountPage() {
 																	className="file-input"
 																	type="file"
 																	accept="image/jpeg,image/png,application/pdf"
-																	disabled={uploadingId === order.id}
+																	disabled={actionBusy}
 																	onChange={(event) => {
 																		void handleReceipt(order, event.target.files?.[0] ?? null);
 																		event.target.value = "";
@@ -568,6 +616,18 @@ export default function AccountPage() {
 																/>
 															</label>
 															{uploadingId === order.id && <p className="service-note">上載中…</p>}
+															{showCancel && (
+																<div className="service-actions">
+																	<button
+																		type="button"
+																		className="btn btn-outline btn-sm"
+																		disabled={actionBusy}
+																		onClick={() => void handleCancelOrder(order)}
+																	>
+																		{cancelBusyId === order.id ? "取消中…" : "取消訂單"}
+																	</button>
+																</div>
+															)}
 														</>
 													)
 												)}
@@ -576,6 +636,9 @@ export default function AccountPage() {
 												)}
 												{order.status === "approved" && (
 													<p className="service-note">已於 {formatDateTime(order.approved_at)} 開通。</p>
+												)}
+												{order.status === "cancelled" && (
+													<p className="service-note">此訂單已取消。</p>
 												)}
 											</article>
 											);

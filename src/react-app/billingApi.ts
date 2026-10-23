@@ -292,6 +292,21 @@ export function switchOrderToFps(
 	);
 }
 
+export function cancelOrder(
+	token: string,
+	orderId: string,
+	reason = "",
+): Promise<{ ok: boolean; duplicate?: boolean; order: Order }> {
+	return request<{ ok: boolean; duplicate?: boolean; order: Order }>(
+		`/api/orders/${orderId}/cancel`,
+		{
+			method: "POST",
+			body: JSON.stringify(reason ? { reason } : {}),
+		},
+		token,
+	);
+}
+
 export function getNotifications(token: string): Promise<NotificationsResponse> {
 	return request<NotificationsResponse>("/api/notifications", {}, token);
 }
