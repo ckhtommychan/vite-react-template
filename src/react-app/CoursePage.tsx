@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
 	ArrowLeft,
 	Calendar,
 	Check,
+	ChevronDown,
 	Clock,
 	Copy,
 	CreditCard,
 	GraduationCap,
 	Landmark,
+	MapPin,
 	MessageCircle,
 	ShieldCheck,
 	Users,
@@ -52,6 +54,21 @@ const courseDetails = [
 	{ icon: GraduationCap, label: "講者", value: "Peter So、Aiden Lam" },
 ];
 
+const faqItems = [
+	{
+		q: "付款後何時確認？",
+		a: "信用卡付款即時確認；FPS 上載收據後由人手核對，一般 1 個工作天內完成，並以電郵或 WhatsApp 通知你。",
+	},
+	{
+		q: "可以轉班或退款嗎？",
+		a: "如需改期，請盡早 WhatsApp 9482 8587 與我們聯絡。退款安排請參閱退款政策。",
+	},
+	{
+		q: "需要帶甚麼？",
+		a: "請自備手提電腦，課堂以實戰操作為主。學費已包括兩小時面授實戰。",
+	},
+];
+
 export default function CoursePage() {
 	const [data, setData] = useState<PlansResponse | null>(null);
 	const [user, setUser] = useState<User | null>(null);
@@ -63,6 +80,9 @@ export default function CoursePage() {
 	const [stripeBusy, setStripeBusy] = useState(false);
 	const [uploading, setUploading] = useState(false);
 	const [copied, setCopied] = useState(false);
+	const [paymentFlash, setPaymentFlash] = useState(false);
+	const [showDock, setShowDock] = useState(false);
+	const paymentRef = useRef<HTMLElement | null>(null);
 
 	useEffect(() => {
 		let active = true;
@@ -101,6 +121,7 @@ export default function CoursePage() {
 				setOrder(result.order);
 				setNotice("已取消信用卡付款。你可以再試信用卡，或改用 FPS。");
 				window.history.replaceState({}, "", "/course");
+				scrollToPayment(true);
 			} catch (err) {
 				if (active) setError(err instanceof Error ? err.message : "未能讀取訂單");
 			}
@@ -110,6 +131,26 @@ export default function CoursePage() {
 		};
 	}, [user]);
 
+	useEffect(() => {
+		if (!order) {
+			setShowDock(false);
+			return;
+		}
+		const node = paymentRef.current;
+		if (!node || typeof IntersectionObserver === "undefined") {
+			setShowDock(true);
+			return;
+		}
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				setShowDock(!entry.isIntersecting);
+			},
+			{ root: null, threshold: 0.35, rootMargin: "-72px 0px 0px 0px" },
+		);
+		observer.observe(node);
+		return () => observer.disconnect();
+	}, [order]);
+
 	const product = data?.products.find(
 		(item) => item.kind === "course" && item.code === COURSE_PRODUCT_CODE,
 	);
@@ -118,6 +159,23 @@ export default function CoursePage() {
 	const isPaid = order?.status === "approved";
 	const isStripeOrder = order?.payment_method === "stripe" && !isPaid;
 	const stripeStatus = order?.stripe_payment_status ?? "requires_payment";
+	const checkoutStep: 1 | 2 | 3 = !order ? 1 : isPaid ? 3 : 2;
+	const orderNeedsPayment =
+		!!order &&
+		!isPaid &&
+		(order.status === "pending_payment" ||
+			order.status === "rejected" ||
+			(isStripeOrder && stripeStatus !== "paid"));
+
+	function scrollToPayment(flash = true) {
+		window.setTimeout(() => {
+			document.getElementById("course-payment")?.scrollIntoView({ behavior: "smooth", block: "start" });
+			if (flash) {
+				setPaymentFlash(true);
+				window.setTimeout(() => setPaymentFlash(false), 1600);
+			}
+		}, 60);
+	}
 
 	async function startOrder() {
 		if (busy) return;
@@ -136,9 +194,7 @@ export default function CoursePage() {
 					? "已找回你尚未付款的報名。請選擇信用卡或 FPS 付款。"
 					: "報名訂單已建立，請選擇信用卡或 FPS 付款。",
 			);
-			window.setTimeout(() => {
-				document.getElementById("course-payment")?.scrollIntoView({ behavior: "smooth", block: "start" });
-			}, 60);
+			scrollToPayment(true);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "未能建立報名訂單");
 		} finally {
@@ -184,6 +240,7 @@ export default function CoursePage() {
 			const result = await switchOrderToFps(token, currentOrder.id);
 			setOrder(result.order);
 			setNotice("已改用 FPS 付款。請按下方資料轉帳並上載收據。");
+			scrollToPayment(true);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "未能改用 FPS");
 		} finally {
@@ -219,25 +276,36 @@ export default function CoursePage() {
 
 	return (
 		<ServiceShell active="course">
-			<div className="service-wrap">
-				<section className="service-hero">
+			<div className={`service-wrap course-flow${order ? " has-order" : ""}`}>
+				<section className="course-hero">
 					<p className="service-eyebrow">IDH Academy · AI 教育</p>
-					<h1>
-						{COURSE_NAME}
-						<br />
-						<strong>網上報名及付款</strong>
-					</h1>
-					<p className="service-lede">
-						兩小時小班實戰。用 Google 登入建立訂單，可選信用卡（Stripe）即時付款，
-						或 FPS 轉數快轉帳後上載收據，我們會確認你的班期。
+					<h1>{COURSE_NAME}</h1>
+					<p className="course-lede">
+						兩小時小班實戰。用 Google 登入建立訂單，可選信用卡即時付款，或 FPS 轉帳後上載收據。
 					</p>
-					<div className="service-actions">
-						<a className="btn btn-outline" href="/#course">
-							<ArrowLeft size={17} aria-hidden="true" />
+					<nav className="course-steps" aria-label="報名流程">
+						<ol>
+							<li className={checkoutStep >= 1 ? "is-done" : ""} data-active={checkoutStep === 1}>
+								<span className="course-step-num">1</span>
+								<span className="course-step-label">填資料</span>
+							</li>
+							<li className={checkoutStep >= 2 ? "is-done" : ""} data-active={checkoutStep === 2}>
+								<span className="course-step-num">2</span>
+								<span className="course-step-label">付款</span>
+							</li>
+							<li className={checkoutStep >= 3 ? "is-done" : ""} data-active={checkoutStep === 3}>
+								<span className="course-step-num">3</span>
+								<span className="course-step-label">確認</span>
+							</li>
+						</ol>
+					</nav>
+					<div className="course-hero-actions">
+						<a className="btn btn-outline btn-sm" href="/#course">
+							<ArrowLeft size={16} aria-hidden="true" />
 							返回課程詳情
 						</a>
-						<a className="btn btn-outline" href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-							<MessageCircle size={17} aria-hidden="true" />
+						<a className="btn btn-outline btn-sm" href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
+							<MessageCircle size={16} aria-hidden="true" />
 							WhatsApp 查詢
 						</a>
 					</div>
@@ -246,55 +314,101 @@ export default function CoursePage() {
 							此環境未設定 Firebase，暫時未能登入報名，請直接 WhatsApp 我們。
 						</p>
 					)}
-					{notice && <p className="notice is-ok">{notice}</p>}
-					{error && <p className="notice is-error">{error}</p>}
+					{(notice || error) && (
+						<div className="course-alerts" role="status">
+							{notice && <p className="notice is-ok">{notice}</p>}
+							{error && <p className="notice is-error">{error}</p>}
+						</div>
+					)}
 				</section>
 
-				<section className="panel" aria-labelledby="course-info-heading">
-					<div className="section-head">
-						<div>
-							<h2 id="course-info-heading">課程資料</h2>
-							<p>學費已包括兩小時面授實戰，請自備手提電腦。</p>
-						</div>
-						<GraduationCap size={28} aria-hidden="true" />
+				<section className="course-offer" aria-labelledby="course-offer-heading">
+					<div className="course-offer-copy">
+						<p className="course-kicker">學費</p>
+						<h2 id="course-offer-heading">
+							<strong>{formatHkd(price)}</strong>
+							<span> / 一位（優惠價）</span>
+						</h2>
+						<p>小班教學，名額有限，以完成付款為準。如想報班期已滿，我們會聯絡你安排下一班。</p>
 					</div>
-					<dl className="payment-grid">
-						<div>
-							<dt>學費</dt>
-							<dd>{formatHkd(price)} / 一位（優惠價）</dd>
-						</div>
-						{courseDetails.map((item) => (
-							<div key={item.label}>
-								<dt>{item.label}</dt>
-								<dd>{item.value}</dd>
-							</div>
-						))}
-						<div>
-							<dt>地點</dt>
-							<dd>{VENUE}</dd>
-						</div>
-					</dl>
-					<ul className="service-note">
-						<li>小班教學，名額有限，以完成付款為準。</li>
-						<li>如你想報的班期已滿，我們會聯絡你安排下一班。</li>
-					</ul>
+					{!order && (
+						<button
+							type="button"
+							className="btn btn-primary"
+							disabled={busy || !firebaseConfigured}
+							onClick={() => {
+								document.getElementById("course-payment")?.scrollIntoView({ behavior: "smooth", block: "start" });
+							}}
+						>
+							立即報名
+						</button>
+					)}
+					{order && orderNeedsPayment && (
+						<button type="button" className="btn btn-primary" onClick={() => scrollToPayment(true)}>
+							前往付款
+						</button>
+					)}
 				</section>
 
-				<section id="course-payment" className="payment-panel" aria-labelledby="course-payment-heading">
-					<div className="section-head">
+				<section className="course-details" aria-labelledby="course-info-heading">
+					<div className="course-section-head">
+						<h2 id="course-info-heading">課程資料</h2>
+						<p>學費已包括兩小時面授實戰，請自備手提電腦。</p>
+					</div>
+					<div className="course-detail-grid">
+						{courseDetails.map((item) => {
+							const Icon = item.icon;
+							return (
+								<article key={item.label} className="course-detail-card">
+									<Icon size={20} aria-hidden="true" />
+									<div>
+										<h3>{item.label}</h3>
+										<p>{item.value}</p>
+									</div>
+								</article>
+							);
+						})}
+						<article className="course-detail-card course-detail-venue">
+							<MapPin size={20} aria-hidden="true" />
+							<div>
+								<h3>地點</h3>
+								<p>{VENUE}</p>
+							</div>
+						</article>
+					</div>
+				</section>
+
+				<section
+					id="course-payment"
+					ref={paymentRef}
+					className={`course-payment-panel${paymentFlash ? " is-flash" : ""}`}
+					aria-labelledby="course-payment-heading"
+				>
+					<div className="course-payment-head">
 						<div>
-							<h2 id="course-payment-heading">報名及付款</h2>
-							<p>{formatHkd(price)} · 一位 · 信用卡或 FPS</p>
+							<p className="course-kicker">{order ? "步驟 2 · 付款" : "步驟 1 · 報名"}</p>
+							<h2 id="course-payment-heading">{order ? "選擇付款方式" : "報名及付款"}</h2>
+							<p>
+								{order
+									? `訂單 ${order.product_code} · ${formatHkd(order.amount_hkd)} · 狀態：${
+											isPaid
+												? "已付款"
+												: isStripeOrder
+													? (STRIPE_STATUS_LABELS[stripeStatus] ?? stripeStatus)
+													: "待付款"
+										}`
+									: `${formatHkd(price)} · 一位 · 信用卡或 FPS`}
+							</p>
 						</div>
-						<CreditCard size={28} aria-hidden="true" />
+						<ShieldCheck size={28} aria-hidden="true" />
 					</div>
 
 					{!order ? (
 						<>
-							<label className="field">
+							<label className="field course-note-field">
 								<span>姓名、聯絡電話及想報班期（選填）</span>
 								<textarea
-									className="file-input"
+									className="course-textarea"
 									rows={3}
 									value={note}
 									maxLength={500}
@@ -322,14 +436,6 @@ export default function CoursePage() {
 						</>
 					) : (
 						<>
-							<p className="service-note">
-								訂單 {order.product_code} · {formatHkd(order.amount_hkd)} · 狀態：
-								{isPaid
-									? "已付款"
-									: isStripeOrder
-										? (STRIPE_STATUS_LABELS[stripeStatus] ?? stripeStatus)
-										: "待付款"}
-							</p>
 							{(order.status === "pending_payment" || order.status === "rejected") && (
 								<div className="payment-choice" role="group" aria-label="付款方式">
 									<button
@@ -371,7 +477,11 @@ export default function CoursePage() {
 										</div>
 										<div>
 											<dt>付款連結</dt>
-											<dd>{order.stripe_checkout_expires_at ? `有效至 ${formatDateTime(order.stripe_checkout_expires_at)}` : "可重新建立"}</dd>
+											<dd>
+												{order.stripe_checkout_expires_at
+													? `有效至 ${formatDateTime(order.stripe_checkout_expires_at)}`
+													: "可重新建立"}
+											</dd>
 										</div>
 									</dl>
 									{stripeStatus === "paid_activation_failed" && (
@@ -389,7 +499,11 @@ export default function CoursePage() {
 											disabled={stripeBusy || stripeStatus === "paid_activation_failed"}
 											onClick={() => void beginStripe(order)}
 										>
-											{stripeBusy ? "處理中…" : stripeStatus === "processing" ? "重新檢查付款" : "繼續信用卡付款"}
+											{stripeBusy
+												? "處理中…"
+												: stripeStatus === "processing"
+													? "重新檢查付款"
+													: "繼續信用卡付款"}
 										</button>
 									</div>
 									<p className="service-note">
@@ -455,13 +569,14 @@ export default function CoursePage() {
 									{uploading && <p className="service-note">上載中…</p>}
 									{order.receipt && (
 										<p className="notice is-ok">
-											已收到收據：{order.receipt.original_name ?? order.receipt.mime_type}。我們會人手核對後確認班期。
+											已收到收據：{order.receipt.original_name ?? order.receipt.mime_type}
+											。我們會人手核對後確認班期。
 										</p>
 									)}
 								</>
 							)}
 							{isPaid && (
-								<p className="notice is-ok">
+								<p className="notice is-ok course-paid-notice">
 									<Check size={16} aria-hidden="true" /> 付款已確認，我們會盡快聯絡你確認課堂安排。
 								</p>
 							)}
@@ -469,34 +584,58 @@ export default function CoursePage() {
 					)}
 				</section>
 
-				<section className="panel" style={{ marginTop: "2rem" }} aria-labelledby="course-faq-heading">
-					<div className="panel-head">
+				<section className="course-faq" aria-labelledby="course-faq-heading">
+					<div className="course-faq-head">
 						<h2 id="course-faq-heading">報名須知</h2>
+						<p>確認時間、轉班退款與上課準備。</p>
 					</div>
-					<details>
-						<summary>付款後何時確認？</summary>
-						<p className="service-note">信用卡付款即時確認；FPS 上載收據後由人手核對，一般 1 個工作天內完成，並以電郵或 WhatsApp 通知你。</p>
-					</details>
-					<details>
-						<summary>可以轉班或退款嗎？</summary>
-						<p className="service-note">
-							如需改期，請盡早 WhatsApp 9482 8587 與我們聯絡。退款安排請參閱
-							<a href="/refund-policy">退款政策</a>。
-						</p>
-					</details>
-					<details>
-						<summary>需要帶甚麼？</summary>
-						<p className="service-note">請自備手提電腦，課堂以實戰操作為主。</p>
-					</details>
-					<p className="service-note">
+					<div className="course-faq-list">
+						{faqItems.map((item) => (
+							<details key={item.q} className="course-faq-item">
+								<summary>
+									<span>{item.q}</span>
+									<ChevronDown size={18} aria-hidden="true" className="course-faq-chevron" />
+								</summary>
+								<div className="course-faq-answer">
+									<p>
+										{item.q === "可以轉班或退款嗎？" ? (
+											<>
+												如需改期，請盡早 WhatsApp 9482 8587 與我們聯絡。退款安排請參閱
+												<a href="/refund-policy">退款政策</a>。
+											</>
+										) : (
+											item.a
+										)}
+									</p>
+								</div>
+							</details>
+						))}
+					</div>
+					<p className="course-legal">
 						付款即表示你同意<a href="/terms">服務條款</a>及<a href="/refund-policy">退款政策</a>
 						；個人資料處理方式請參閱<a href="/privacy-policy">隱私政策</a>。
-					</p>
-					<p className="service-note">
-						<ShieldCheck size={16} aria-hidden="true" /> 收據只供人手核對付款，不會公開展示。
+						<span>
+							<ShieldCheck size={15} aria-hidden="true" /> 收據只供人手核對付款，不會公開展示。
+						</span>
 					</p>
 				</section>
 			</div>
+
+			{order && orderNeedsPayment && showDock && (
+				<div className="course-payment-dock" role="complementary" aria-label="未完成付款">
+					<div className="course-payment-dock-inner">
+						<div>
+							<strong>報名待付款</strong>
+							<span>
+								{order.product_code} · {formatHkd(order.amount_hkd)}
+							</span>
+						</div>
+						<button type="button" className="btn btn-primary btn-sm" onClick={() => scrollToPayment(true)}>
+							完成付款
+						</button>
+					</div>
+				</div>
+			)}
 		</ServiceShell>
 	);
 }
