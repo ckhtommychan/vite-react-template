@@ -1,0 +1,32 @@
+# Origin HTTP only — Cloudflare orange-cloud + SSL Flexible terminates TLS at CF
+# and connects to this Caddy on :80.
+{
+	auto_https off
+	admin off
+}
+
+http://idh.asia, http://www.idh.asia {
+	encode gzip
+	reverse_proxy idh:3000
+}
+
+http://billing.idh.asia {
+	encode gzip
+	reverse_proxy redpen-billing:8080
+}
+
+http://demo-redpen.idh.asia {
+	encode gzip
+	reverse_proxy redpen-backend:12398
+}
+
+http://demo-admin.idh.asia {
+	encode gzip
+	reverse_proxy redpen-admin:12401
+}
+
+# IP / default vhost for direct smoke tests
+:80 {
+	encode gzip
+	reverse_proxy idh:3000
+}
