@@ -67,7 +67,7 @@
 }
 
 .pricing-flow {
-	width: min(1040px, calc(100% - 2rem));
+	width: min(1120px, calc(100% - 1.5rem));
 	padding-bottom: 2.5rem;
 }
 
@@ -278,6 +278,8 @@
 }
 
 .faq-list {
+	width: min(720px, 100%);
+	margin-inline: auto;
 	border: 0.0625rem solid var(--line);
 	border-radius: 12px;
 	background: var(--surface);

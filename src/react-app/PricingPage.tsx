@@ -262,7 +262,7 @@ export default function PricingPage() {
 			>
 				<div className="section-head">
 					<div>
-						<p className="checkout-kicker">步驟 2 · 付款</p>
+						<p className="checkout-kicker">步驟 2</p>
 						<h2 id="payment-heading">選擇付款方式</h2>
 						<p>
 							訂單 {order.product_code} · {formatHkd(order.amount_hkd)} · 狀態：
