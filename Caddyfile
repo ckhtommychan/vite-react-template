@@ -1,7 +1,5 @@
-# Origin HTTP only — Cloudflare orange-cloud + SSL mode Flexible terminates TLS at CF
-# and connects to this Caddy on :80. Do NOT enable Caddyfile.tls / grey-cloud LE while
-# Flexible + proxied DNS is in use (would fight CF). Switch to Full (strict) only if
-# you later move TLS onto Caddy and set records to DNS-only.
+# Origin HTTP only — Cloudflare orange-cloud + SSL Flexible terminates TLS at CF
+# and connects to this Caddy on :80.
 {
 	auto_https off
 	admin off
@@ -15,6 +13,16 @@ http://idh.asia, http://www.idh.asia {
 http://billing.idh.asia {
 	encode gzip
 	reverse_proxy redpen-billing:8080
+}
+
+http://demo-redpen.idh.asia {
+	encode gzip
+	reverse_proxy redpen-backend:12398
+}
+
+http://demo-admin.idh.asia {
+	encode gzip
+	reverse_proxy redpen-admin:12401
 }
 
 # IP / default vhost for direct smoke tests
