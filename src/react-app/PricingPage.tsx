@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, Check, CreditCard, Landmark, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Check, ChevronDown, CreditCard, Landmark, ShieldCheck } from "lucide-react";
 import type { User } from "firebase/auth";
 import ServiceShell from "./ServiceShell";
 import { firebaseConfigured, signInWithGoogle, watchAuth } from "./firebase";
@@ -36,9 +36,13 @@ export default function PricingPage() {
 	const [loading, setLoading] = useState(true);
 	const [busyProduct, setBusyProduct] = useState<string | null>(null);
 	const [order, setOrder] = useState<Order | null>(null);
+	const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
 	const [uploading, setUploading] = useState(false);
 	const [stripeBusy, setStripeBusy] = useState(false);
 	const [copied, setCopied] = useState(false);
+	const [paymentFlash, setPaymentFlash] = useState(false);
+	const [showDock, setShowDock] = useState(false);
+	const paymentRef = useRef<HTMLElement | null>(null);
 
 	useEffect(() => {
 		let active = true;
@@ -82,8 +86,10 @@ export default function PricingPage() {
 					return;
 				}
 				setOrder(result.order);
+				setSelectedProduct(result.order.product_code);
 				setNotice("已取消信用卡付款。你可以再試信用卡，或改用 FPS。");
 				window.history.replaceState({}, "", "/pricing");
+				scrollToPayment(true);
 			} catch (err) {
 				if (active) setError(err instanceof Error ? err.message : "未能讀取訂單");
 			}
@@ -93,9 +99,34 @@ export default function PricingPage() {
 		};
 	}, [user]);
 
-	function scrollToPayment() {
+	useEffect(() => {
+		if (!order) {
+			setShowDock(false);
+			return;
+		}
+		const node = paymentRef.current;
+		if (!node || typeof IntersectionObserver === "undefined") {
+			setShowDock(true);
+			return;
+		}
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				setShowDock(!entry.isIntersecting);
+			},
+			{ root: null, threshold: 0.35, rootMargin: "-72px 0px 0px 0px" },
+		);
+		observer.observe(node);
+		return () => observer.disconnect();
+	}, [order]);
+
+	function scrollToPayment(flash = true) {
 		window.setTimeout(() => {
-			document.getElementById("payment")?.scrollIntoView({ behavior: "smooth", block: "start" });
+			const el = document.getElementById("payment");
+			el?.scrollIntoView({ behavior: "smooth", block: "start" });
+			if (flash) {
+				setPaymentFlash(true);
+				window.setTimeout(() => setPaymentFlash(false), 1600);
+			}
 		}, 60);
 	}
 
@@ -135,7 +166,7 @@ export default function PricingPage() {
 			const result = await switchOrderToFps(token, currentOrder.id);
 			setOrder(result.order);
 			setNotice("已改用 FPS 付款。請按下方資料轉帳並上載收據。");
-			scrollToPayment();
+			scrollToPayment(true);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "未能改用 FPS");
 		} finally {
@@ -161,6 +192,7 @@ export default function PricingPage() {
 
 	async function startOrder(productCode: string) {
 		setBusyProduct(productCode);
+		setSelectedProduct(productCode);
 		setError(null);
 		setNotice(null);
 		try {
@@ -169,12 +201,13 @@ export default function PricingPage() {
 			const token = await currentUser.getIdToken();
 			const result = await createOrder(token, productCode);
 			setOrder(result.order);
+			setSelectedProduct(result.order.product_code);
 			setNotice(
 				result.duplicate
 					? "已找回你尚未付款的訂單。請選擇信用卡或 FPS 付款。"
 					: "訂單已建立，請選擇信用卡或 FPS 付款。",
 			);
-			scrollToPayment();
+			scrollToPayment(true);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "未能建立訂單");
 		} finally {
@@ -211,43 +244,238 @@ export default function PricingPage() {
 	const instructions = order?.payment_instructions ?? data?.payment;
 	const isStripeOrder = order?.payment_method === "stripe" && order.status !== "approved";
 	const stripeStatus = order?.stripe_payment_status ?? "requires_payment";
+	const checkoutStep: 1 | 2 | 3 = !order ? 1 : order.status === "approved" ? 3 : 2;
+	const orderNeedsPayment =
+		!!order &&
+		(order.status === "pending_payment" ||
+			order.status === "rejected" ||
+			(isStripeOrder && stripeStatus !== "paid"));
+
+	function renderPaymentPanel() {
+		if (!order) return null;
+		return (
+			<section
+				id="payment"
+				ref={paymentRef}
+				className={`payment-panel${paymentFlash ? " is-flash" : ""}`}
+				aria-labelledby="payment-heading"
+			>
+				<div className="section-head">
+					<div>
+						<p className="checkout-kicker">步驟 2</p>
+						<h2 id="payment-heading">選擇付款方式</h2>
+						<p>
+							訂單 {order.product_code} · {formatHkd(order.amount_hkd)} · 狀態：
+							{order.status === "approved"
+								? "已開通"
+								: isStripeOrder
+									? (STRIPE_STATUS_LABELS[stripeStatus] ?? stripeStatus)
+									: "待付款"}
+						</p>
+					</div>
+					<ShieldCheck size={28} aria-hidden="true" />
+				</div>
+				{(order.status === "pending_payment" || order.status === "rejected") && (
+					<div className="payment-choice" role="group" aria-label="付款方式">
+						<button
+							type="button"
+							className={`payment-choice-card${order.payment_method === "stripe" ? " is-selected" : ""}`}
+							disabled={stripeBusy || data?.payment.stripe_enabled !== true}
+							onClick={() => void beginStripe(order)}
+						>
+							<CreditCard size={22} aria-hidden="true" />
+							<strong>信用卡（Stripe）</strong>
+							<span>Visa / Mastercard，付款後即時開通</span>
+						</button>
+						<button
+							type="button"
+							className={`payment-choice-card${order.payment_method !== "stripe" ? " is-selected" : ""}`}
+							disabled={stripeBusy}
+							onClick={() => void chooseFps(order)}
+						>
+							<Landmark size={22} aria-hidden="true" />
+							<strong>FPS 轉數快</strong>
+							<span>轉帳後上載收據，人手核對</span>
+						</button>
+					</div>
+				)}
+				{isStripeOrder ? (
+					<>
+						<dl className="payment-grid">
+							<div>
+								<dt>付款參考</dt>
+								<dd>{order.payment_reference}</dd>
+							</div>
+							<div>
+								<dt>金額</dt>
+								<dd>{formatHkd(order.amount_hkd)}</dd>
+							</div>
+							<div>
+								<dt>付款方式</dt>
+								<dd>信用卡（Stripe）</dd>
+							</div>
+							<div>
+								<dt>付款連結</dt>
+								<dd>
+									{order.stripe_checkout_expires_at
+										? `有效至 ${formatDateTime(order.stripe_checkout_expires_at)}`
+										: "可重新建立"}
+								</dd>
+							</div>
+						</dl>
+						{stripeStatus === "paid_activation_failed" && (
+							<p className="notice is-error">
+								付款已收到，但自動開通未完成。請勿重複付款；我們會人手處理。
+							</p>
+						)}
+						{stripeStatus === "processing" && (
+							<p className="notice">付款正在處理中，請稍後重新檢查。</p>
+						)}
+						<div className="service-actions">
+							<button
+								type="button"
+								className="btn btn-primary"
+								disabled={stripeBusy || stripeStatus === "paid_activation_failed"}
+								onClick={() => void beginStripe(order)}
+							>
+								{stripeBusy
+									? "處理中…"
+									: stripeStatus === "processing"
+										? "重新檢查付款"
+										: "繼續信用卡付款"}
+							</button>
+						</div>
+						<p className="service-note">
+							信用卡由 Stripe 安全處理。付款後如未即時開通，可到帳戶頁重新整理。
+						</p>
+					</>
+				) : (
+					<>
+						<dl className="payment-grid">
+							<div>
+								<dt>付款參考</dt>
+								<dd>{order.payment_reference}</dd>
+							</div>
+							<div>
+								<dt>金額</dt>
+								<dd>{formatHkd(order.amount_hkd)}</dd>
+							</div>
+							<div>
+								<dt>FPS 轉數快</dt>
+								<dd>{instructions?.fps_number ?? "—"}</dd>
+							</div>
+							<div>
+								<dt>收款名稱</dt>
+								<dd>{instructions?.fps_name ?? "—"}</dd>
+							</div>
+							{instructions?.bank_name && (
+								<div>
+									<dt>銀行</dt>
+									<dd>{instructions.bank_name}</dd>
+								</div>
+							)}
+							{instructions?.bank_account && (
+								<div>
+									<dt>銀行戶口</dt>
+									<dd>{instructions.bank_account}</dd>
+								</div>
+							)}
+						</dl>
+						<div className="service-actions">
+							<button type="button" className="btn btn-outline btn-sm" onClick={copyReference}>
+								{copied ? "已複製參考編號" : "複製付款參考"}
+							</button>
+							<a className="btn btn-outline btn-sm" href="/account">
+								稍後在帳戶上載收據
+							</a>
+						</div>
+						<label className="field">
+							<span>上載付款收據（JPG、PNG 或 PDF，最多 10 MB）</span>
+							<input
+								className="file-input"
+								type="file"
+								accept="image/jpeg,image/png,application/pdf"
+								disabled={uploading || order.status === "approved"}
+								onChange={(event) => {
+									void handleReceipt(event.target.files?.[0] ?? null);
+									event.target.value = "";
+								}}
+							/>
+						</label>
+						{uploading && <p className="service-note">上載中…</p>}
+						{order.receipt && (
+							<p className="notice is-ok">
+								已收到收據：{order.receipt.original_name ?? order.receipt.mime_type}
+								。我們會人手核對後開通。
+							</p>
+						)}
+					</>
+				)}
+			</section>
+		);
+	}
+
+	const faqItems = [
+		{
+			q: "會自動續期嗎？",
+			a: "不會。月費及年費都是一次過預付，到期前我們會在站內通知你；到期後有 3 日寬限期。",
+		},
+		{
+			q: "可以中途轉方案嗎？",
+			a: "可以。轉方案會在下一期生效，不設按比例退款；本期未使用的文章不會結轉。",
+		},
+		{
+			q: "未用的文章可以留到下個月嗎？",
+			a: "不可以。每月額度在該收費期內有效，未用部分不結轉。",
+		},
+		{
+			q: "付款後多久開通？",
+			a: "信用卡付款後一般即時開通；FPS 上載收據後由人手核對，一般 1 個工作天內完成。",
+		},
+	];
 
 	return (
 		<ServiceShell active="pricing">
-			<div className="service-wrap">
-				<section className="service-hero">
-					<p className="service-eyebrow">RedPen 香港定價</p>
-					<h1>
-						每月固定額度，<strong>唔使逐張圖計</strong>。
-					</h1>
-					<p className="service-lede">
-						每篇文章固定 3 頁大綱及 3 張圖片。方案按月或按年預付，不自動續期；
-						額外圖片重生成或加開文章可用 Credits 補購。
+			<div className={`service-wrap pricing-flow${order ? " has-order" : ""}`}>
+				<section className="pricing-hero">
+					<p className="service-eyebrow">IDH · RedPen</p>
+					<h1>選擇你的方案</h1>
+					<p className="pricing-lede">
+						每月固定額度，唔使逐張圖計。選好方案後即時進入付款。
 					</p>
-					<div className="service-actions">
-						<a className="btn btn-primary" href="https://redpen.idh.asia" target="_blank" rel="noreferrer">
-							前往 RedPen 開始創作
-							<ArrowRight size={17} aria-hidden="true" />
-						</a>
-						<a className="btn btn-outline" href="/account">
-							查看我的訂閱
-						</a>
-					</div>
+					<nav className="checkout-steps" aria-label="購買流程">
+						<ol>
+							<li className={checkoutStep >= 1 ? "is-done" : ""} data-active={checkoutStep === 1}>
+								<span className="checkout-step-num">1</span>
+								<span className="checkout-step-label">選方案</span>
+							</li>
+							<li className={checkoutStep >= 2 ? "is-done" : ""} data-active={checkoutStep === 2}>
+								<span className="checkout-step-num">2</span>
+								<span className="checkout-step-label">付款</span>
+							</li>
+							<li className={checkoutStep >= 3 ? "is-done" : ""} data-active={checkoutStep === 3}>
+								<span className="checkout-step-num">3</span>
+								<span className="checkout-step-label">開通</span>
+							</li>
+						</ol>
+					</nav>
 					{!firebaseConfigured && (
 						<p className="notice is-error">
 							此環境未設定 Firebase，暫時只能瀏覽方案，未能登入購買。
 						</p>
 					)}
-					{notice && <p className="notice is-ok">{notice}</p>}
-					{error && <p className="notice is-error">{error}</p>}
+					{(notice || error) && (
+						<div className="pricing-alerts" role="status">
+							{notice && <p className="notice is-ok">{notice}</p>}
+							{error && <p className="notice is-error">{error}</p>}
+						</div>
+					)}
 				</section>
 
-				<section aria-labelledby="plans-heading">
-					<div className="section-head">
-						<div>
-							<h2 id="plans-heading">月費與年費方案</h2>
-							<p>年費一次過預付 12 個月，平均每月較平；所有方案均包含 3 頁大綱及每篇 3 張圖片。</p>
-						</div>
+				<section className="pricing-primary" aria-labelledby="plans-heading">
+					<div className="pricing-primary-head">
+						<h2 id="plans-heading">月費與年費方案</h2>
+						<p>年費一次過預付 12 個月，平均每月較平；每篇含 3 頁大綱及 3 張圖片。</p>
 						<div className="billing-toggle" role="group" aria-label="收費週期">
 							<button type="button" aria-pressed={cycle === "monthly"} onClick={() => setCycle("monthly")}>
 								月費
@@ -266,14 +494,18 @@ export default function PricingPage() {
 								const product = planProduct(plan.code, cycle);
 								const price = cycle === "annual" ? plan.annual_price_hkd : plan.monthly_price_hkd;
 								const featured = plan.code === "growth";
+								const selected = !!product && selectedProduct === product.code;
 								return (
-									<article key={plan.code} className={`plan-card${featured ? " is-featured" : ""}`}>
+									<article
+										key={plan.code}
+										className={`plan-card${featured ? " is-featured" : ""}${selected ? " is-selected" : ""}`}
+									>
+										{featured && <span className="plan-flag">最受歡迎</span>}
 										<div className="plan-card-head">
 											<div>
 												<h3>{plan.name_zh}</h3>
 												<p className="plan-en">{plan.name_en}</p>
 											</div>
-											{featured && <span className="plan-flag">最受歡迎</span>}
 										</div>
 										<div className="plan-price">
 											<strong>{formatHkd(price)}</strong>
@@ -281,25 +513,29 @@ export default function PricingPage() {
 										</div>
 										<ul className="plan-features">
 											<li>
-												<Check size={15} aria-hidden="true" />
+												<Check size={16} aria-hidden="true" />
 												每月 {plan.monthly_posts} 篇，每篇 3 張圖片
 											</li>
 											{plan.features
 												.filter((feature) => !feature.includes("每月") && !feature.includes("每篇 3 張圖片"))
 												.map((feature) => (
 													<li key={feature}>
-														<Check size={15} aria-hidden="true" />
+														<Check size={16} aria-hidden="true" />
 														{feature}
 													</li>
 												))}
 										</ul>
 										<button
 											type="button"
-											className={featured ? "btn btn-primary" : "btn btn-outline"}
+											className={featured || selected ? "btn btn-primary" : "btn btn-outline"}
 											disabled={!product || busyProduct !== null}
 											onClick={() => product && startOrder(product.code)}
 										>
-											{busyProduct === product?.code ? "建立訂單中…" : `選擇${plan.name_zh}`}
+											{busyProduct === product?.code
+												? "建立訂單中…"
+												: selected && order
+													? "已選 · 前往付款"
+													: `選擇${plan.name_zh}`}
 										</button>
 									</article>
 								);
@@ -308,13 +544,28 @@ export default function PricingPage() {
 					)}
 				</section>
 
-				<section className="trial-strip" aria-labelledby="trial-heading">
-					<h2 id="trial-heading">第一次用？HK$29 試一篇</h2>
-					<p>
-						每帳戶限購一次，30 日內有效，包含 1 篇完整內容、3 頁大綱及 3 張圖片。
-							HK$29 不可重生成；48 小時內升級任何月費或年費方案，會從方案價扣減 HK$29。
-					</p>
-					<div className="service-actions">
+				{order && renderPaymentPanel()}
+
+				<section className="pricing-secondary" aria-labelledby="extras-heading">
+					<div className="pricing-secondary-head">
+						<div>
+							<h2 id="extras-heading">其他選項</h2>
+							<p>第一次試用，或為現有訂閱加購 Credits。</p>
+						</div>
+						<a className="pricing-account-link" href="/account">
+							查看我的訂閱
+							<ArrowRight size={16} aria-hidden="true" />
+						</a>
+					</div>
+
+					<article className="trial-strip" aria-labelledby="trial-heading">
+						<div className="trial-strip-copy">
+							<h3 id="trial-heading">第一次用？HK$29 試一篇</h3>
+							<p>
+								每帳戶限購一次，30 日內有效。含 1 篇完整內容、3 頁大綱及 3 張圖片；48 小時內升級可扣減
+								HK$29。
+							</p>
+						</div>
 						<button
 							type="button"
 							className="btn btn-amber"
@@ -323,212 +574,83 @@ export default function PricingPage() {
 						>
 							{busyProduct === trialProduct?.code ? "建立訂單中…" : "購買試用"}
 						</button>
-					</div>
+					</article>
+
+					<article className="credit-panel" aria-labelledby="credits-heading">
+						<div className="credit-panel-head">
+							<div>
+								<h3 id="credits-heading">Credits 加購</h3>
+								<p>1 Credit = 重生成 1 張圖；5 Credits = 加開 1 篇文章。</p>
+							</div>
+						</div>
+						<div className="credit-grid">
+							{creditProducts.map((product) => (
+								<div
+									key={product.code}
+									className={`credit-card${selectedProduct === product.code ? " is-selected" : ""}`}
+								>
+									<div>
+										<h4>{product.name_zh}</h4>
+										<p>{product.metadata.summary ?? `${product.credits_amount} Credits`}</p>
+									</div>
+									<strong>{formatHkd(product.price_hkd)}</strong>
+									<button
+										type="button"
+										className="btn btn-outline btn-sm"
+										disabled={busyProduct !== null}
+										onClick={() => startOrder(product.code)}
+									>
+										{busyProduct === product.code ? "建立中…" : "購買"}
+									</button>
+								</div>
+							))}
+						</div>
+					</article>
 				</section>
 
-				<section className="credit-panel" aria-labelledby="credits-heading">
-					<div className="section-head">
-						<div>
-							<h2 id="credits-heading">Credits 加購</h2>
-							<p>
-								1 Credit 可重生成 1 張圖片；5 Credits 可加開 1 篇文章（包含大綱及 3 張圖片，不設免費重生成）。
-							</p>
-						</div>
-						<CreditCard size={28} aria-hidden="true" />
+				<section className="pricing-faq" aria-labelledby="faq-heading">
+					<div className="pricing-faq-head">
+						<h2 id="faq-heading">常見問題</h2>
+						<p>關於續期、轉方案、額度結轉與開通時間。</p>
 					</div>
-					<div className="credit-list">
-						{creditProducts.map((product) => (
-							<div key={product.code} className="credit-row">
-								<div>
-									<h3>{product.name_zh}</h3>
-									<p>{product.metadata.summary ?? `${product.credits_amount} Credits`}</p>
+					<div className="faq-list">
+						{faqItems.map((item) => (
+							<details key={item.q} className="faq-item">
+								<summary>
+									<span>{item.q}</span>
+									<ChevronDown size={18} aria-hidden="true" className="faq-chevron" />
+								</summary>
+								<div className="faq-answer">
+									<p>{item.a}</p>
 								</div>
-								<strong>{formatHkd(product.price_hkd)}</strong>
-								<button
-									type="button"
-									className="btn btn-outline btn-sm"
-									disabled={busyProduct !== null}
-									onClick={() => startOrder(product.code)}
-								>
-									{busyProduct === product.code ? "建立中…" : "購買"}
-								</button>
-							</div>
+							</details>
 						))}
 					</div>
 				</section>
 
-				{order && (
-					<section id="payment" className="payment-panel" aria-labelledby="payment-heading">
-						<div className="section-head">
-							<div>
-								<h2 id="payment-heading">付款資料</h2>
-								<p>
-									訂單 {order.product_code} · {formatHkd(order.amount_hkd)} · 狀態：
-									{order.status === "approved"
-										? "已開通"
-										: isStripeOrder
-											? (STRIPE_STATUS_LABELS[stripeStatus] ?? stripeStatus)
-											: "待付款"}
-								</p>
-							</div>
-							<ShieldCheck size={28} aria-hidden="true" />
-						</div>
-						{(order.status === "pending_payment" || order.status === "rejected") && (
-							<div className="payment-choice" role="group" aria-label="付款方式">
-								<button
-									type="button"
-									className={`payment-choice-card${order.payment_method === "stripe" ? " is-selected" : ""}`}
-									disabled={stripeBusy || data?.payment.stripe_enabled !== true}
-									onClick={() => void beginStripe(order)}
-								>
-									<CreditCard size={22} aria-hidden="true" />
-									<strong>信用卡（Stripe）</strong>
-									<span>Visa / Mastercard，付款後即時開通</span>
-								</button>
-								<button
-									type="button"
-									className={`payment-choice-card${order.payment_method !== "stripe" ? " is-selected" : ""}`}
-									disabled={stripeBusy}
-									onClick={() => void chooseFps(order)}
-								>
-									<Landmark size={22} aria-hidden="true" />
-									<strong>FPS 轉數快</strong>
-									<span>轉帳後上載收據，人手核對</span>
-								</button>
-							</div>
-						)}
-						{isStripeOrder ? (
-							<>
-								<dl className="payment-grid">
-									<div>
-										<dt>付款參考</dt>
-										<dd>{order.payment_reference}</dd>
-									</div>
-									<div>
-										<dt>金額</dt>
-										<dd>{formatHkd(order.amount_hkd)}</dd>
-									</div>
-									<div>
-										<dt>付款方式</dt>
-										<dd>信用卡（Stripe）</dd>
-									</div>
-									<div>
-										<dt>付款連結</dt>
-										<dd>{order.stripe_checkout_expires_at ? `有效至 ${formatDateTime(order.stripe_checkout_expires_at)}` : "可重新建立"}</dd>
-									</div>
-								</dl>
-								{stripeStatus === "paid_activation_failed" && (
-									<p className="notice is-error">
-										付款已收到，但自動開通未完成。請勿重複付款；我們會人手處理。
-									</p>
-								)}
-								{stripeStatus === "processing" && (
-									<p className="notice">付款正在處理中，請稍後重新檢查。</p>
-								)}
-								<div className="service-actions">
-									<button
-										type="button"
-										className="btn btn-primary"
-										disabled={stripeBusy || stripeStatus === "paid_activation_failed"}
-										onClick={() => void beginStripe(order)}
-									>
-										{stripeBusy ? "處理中…" : stripeStatus === "processing" ? "重新檢查付款" : "繼續信用卡付款"}
-									</button>
-								</div>
-								<p className="service-note">
-									信用卡由 Stripe 安全處理。付款後如未即時開通，可到帳戶頁重新整理。
-								</p>
-							</>
-						) : (
-							<>
-								<dl className="payment-grid">
-									<div>
-										<dt>付款參考</dt>
-										<dd>{order.payment_reference}</dd>
-									</div>
-									<div>
-										<dt>金額</dt>
-										<dd>{formatHkd(order.amount_hkd)}</dd>
-									</div>
-									<div>
-										<dt>FPS 轉數快</dt>
-										<dd>{instructions?.fps_number ?? "—"}</dd>
-									</div>
-									<div>
-										<dt>收款名稱</dt>
-										<dd>{instructions?.fps_name ?? "—"}</dd>
-									</div>
-									{instructions?.bank_name && (
-										<div>
-											<dt>銀行</dt>
-											<dd>{instructions.bank_name}</dd>
-										</div>
-									)}
-									{instructions?.bank_account && (
-										<div>
-											<dt>銀行戶口</dt>
-											<dd>{instructions.bank_account}</dd>
-										</div>
-									)}
-								</dl>
-								<div className="service-actions">
-									<button type="button" className="btn btn-outline btn-sm" onClick={copyReference}>
-										{copied ? "已複製參考編號" : "複製付款參考"}
-									</button>
-									<a className="btn btn-outline btn-sm" href="/account">
-										稍後在帳戶上載收據
-									</a>
-								</div>
-								<label className="field">
-									<span>上載付款收據（JPG、PNG 或 PDF，最多 10 MB）</span>
-									<input
-										className="file-input"
-										type="file"
-										accept="image/jpeg,image/png,application/pdf"
-										disabled={uploading || order.status === "approved"}
-										onChange={(event) => {
-											void handleReceipt(event.target.files?.[0] ?? null);
-											event.target.value = "";
-										}}
-									/>
-								</label>
-								{uploading && <p className="service-note">上載中…</p>}
-								{order.receipt && (
-									<p className="notice is-ok">
-										已收到收據：{order.receipt.original_name ?? order.receipt.mime_type}。我們會人手核對後開通。
-									</p>
-								)}
-							</>
-						)}
-					</section>
-				)}
-
-				<section className="panel" style={{ marginTop: "2rem" }} aria-labelledby="faq-heading">
-					<div className="panel-head">
-						<h2 id="faq-heading">常見問題</h2>
-					</div>
-					<details>
-						<summary>會自動續期嗎？</summary>
-						<p className="service-note">
-							不會。月費及年費都是一次過預付，到期前我們會在站內通知你；到期後有 3 日寬限期。
-						</p>
-					</details>
-					<details>
-						<summary>可以中途轉方案嗎？</summary>
-						<p className="service-note">
-							可以。轉方案會在下一期生效，不設按比例退款；本期未使用的文章不會結轉。
-						</p>
-					</details>
-					<details>
-						<summary>未用的文章可以留到下個月嗎？</summary>
-						<p className="service-note">不可以。每月額度在該收費期內有效，未用部分不結轉。</p>
-					</details>
-					<details>
-						<summary>付款後多久開通？</summary>
-						<p className="service-note">上載收據後由人手核對，一般 1 個工作天內完成。開通後會收到站內通知。</p>
-					</details>
-				</section>
+				<div className="pricing-footer-links">
+					<a className="btn btn-outline" href="https://redpen.idh.asia" target="_blank" rel="noreferrer">
+						前往 RedPen 開始創作
+						<ArrowRight size={17} aria-hidden="true" />
+					</a>
+				</div>
 			</div>
+
+			{order && orderNeedsPayment && showDock && (
+				<div className="payment-dock" role="complementary" aria-label="未完成付款">
+					<div className="payment-dock-inner">
+						<div>
+							<strong>訂單待付款</strong>
+							<span>
+								{order.product_code} · {formatHkd(order.amount_hkd)}
+							</span>
+						</div>
+						<button type="button" className="btn btn-primary btn-sm" onClick={() => scrollToPayment(true)}>
+							完成付款
+						</button>
+					</div>
+				</div>
+			)}
 		</ServiceShell>
 	);
 }
