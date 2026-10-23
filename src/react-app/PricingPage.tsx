@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, CreditCard, Landmark, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, CreditCard, Landmark, ShieldCheck } from "lucide-react";
 import type { User } from "firebase/auth";
 import ServiceShell from "./ServiceShell";
 import { firebaseConfigured, signInWithGoogle, watchAuth } from "./firebase";
@@ -415,17 +415,50 @@ export default function PricingPage() {
 		);
 	}
 
+	const faqItems = [
+		{
+			q: "會自動續期嗎？",
+			a: "不會。月費及年費都是一次過預付，到期前我們會在站內通知你；到期後有 3 日寬限期。",
+		},
+		{
+			q: "可以中途轉方案嗎？",
+			a: "可以。轉方案會在下一期生效，不設按比例退款；本期未使用的文章不會結轉。",
+		},
+		{
+			q: "未用的文章可以留到下個月嗎？",
+			a: "不可以。每月額度在該收費期內有效，未用部分不結轉。",
+		},
+		{
+			q: "付款後多久開通？",
+			a: "信用卡付款後一般即時開通；FPS 上載收據後由人手核對，一般 1 個工作天內完成。",
+		},
+	];
+
 	return (
 		<ServiceShell active="pricing">
 			<div className={`service-wrap pricing-flow${order ? " has-order" : ""}`}>
-				<section className="service-hero pricing-hero">
+				<section className="pricing-hero">
 					<p className="service-eyebrow">IDH · RedPen</p>
-					<h1>
-						選擇你的方案
-					</h1>
-					<p className="service-lede">
+					<h1>選擇你的方案</h1>
+					<p className="pricing-lede">
 						每月固定額度，唔使逐張圖計。選好方案後即時進入付款。
 					</p>
+					<nav className="checkout-steps" aria-label="購買流程">
+						<ol>
+							<li className={checkoutStep >= 1 ? "is-done" : ""} data-active={checkoutStep === 1}>
+								<span className="checkout-step-num">1</span>
+								<span className="checkout-step-label">選方案</span>
+							</li>
+							<li className={checkoutStep >= 2 ? "is-done" : ""} data-active={checkoutStep === 2}>
+								<span className="checkout-step-num">2</span>
+								<span className="checkout-step-label">付款</span>
+							</li>
+							<li className={checkoutStep >= 3 ? "is-done" : ""} data-active={checkoutStep === 3}>
+								<span className="checkout-step-num">3</span>
+								<span className="checkout-step-label">開通</span>
+							</li>
+						</ol>
+					</nav>
 					{!firebaseConfigured && (
 						<p className="notice is-error">
 							此環境未設定 Firebase，暫時只能瀏覽方案，未能登入購買。
@@ -439,30 +472,10 @@ export default function PricingPage() {
 					)}
 				</section>
 
-				<nav className="checkout-steps" aria-label="購買流程">
-					<ol>
-						<li className={checkoutStep >= 1 ? "is-done" : ""} data-active={checkoutStep === 1}>
-							<span className="checkout-step-num">1</span>
-							<span className="checkout-step-label">選方案</span>
-						</li>
-						<li className={checkoutStep >= 2 ? "is-done" : ""} data-active={checkoutStep === 2}>
-							<span className="checkout-step-num">2</span>
-							<span className="checkout-step-label">付款</span>
-						</li>
-						<li className={checkoutStep >= 3 ? "is-done" : ""} data-active={checkoutStep === 3}>
-							<span className="checkout-step-num">3</span>
-							<span className="checkout-step-label">開通</span>
-						</li>
-					</ol>
-				</nav>
-
 				<section className="pricing-primary" aria-labelledby="plans-heading">
-					<div className="section-head">
-						<div>
-							<p className="checkout-kicker">步驟 1 · 方案</p>
-							<h2 id="plans-heading">月費與年費</h2>
-							<p>年費一次過預付 12 個月，平均每月較平；每篇含 3 頁大綱及 3 張圖片。</p>
-						</div>
+					<div className="pricing-primary-head">
+						<h2 id="plans-heading">月費與年費方案</h2>
+						<p>年費一次過預付 12 個月，平均每月較平；每篇含 3 頁大綱及 3 張圖片。</p>
 						<div className="billing-toggle" role="group" aria-label="收費週期">
 							<button type="button" aria-pressed={cycle === "monthly"} onClick={() => setCycle("monthly")}>
 								月費
@@ -487,12 +500,12 @@ export default function PricingPage() {
 										key={plan.code}
 										className={`plan-card${featured ? " is-featured" : ""}${selected ? " is-selected" : ""}`}
 									>
+										{featured && <span className="plan-flag">最受歡迎</span>}
 										<div className="plan-card-head">
 											<div>
 												<h3>{plan.name_zh}</h3>
 												<p className="plan-en">{plan.name_en}</p>
 											</div>
-											{featured && <span className="plan-flag">最受歡迎</span>}
 										</div>
 										<div className="plan-price">
 											<strong>{formatHkd(price)}</strong>
@@ -500,14 +513,14 @@ export default function PricingPage() {
 										</div>
 										<ul className="plan-features">
 											<li>
-												<Check size={15} aria-hidden="true" />
+												<Check size={16} aria-hidden="true" />
 												每月 {plan.monthly_posts} 篇，每篇 3 張圖片
 											</li>
 											{plan.features
 												.filter((feature) => !feature.includes("每月") && !feature.includes("每篇 3 張圖片"))
 												.map((feature) => (
 													<li key={feature}>
-														<Check size={15} aria-hidden="true" />
+														<Check size={16} aria-hidden="true" />
 														{feature}
 													</li>
 												))}
@@ -534,7 +547,7 @@ export default function PricingPage() {
 				{order && renderPaymentPanel()}
 
 				<section className="pricing-secondary" aria-labelledby="extras-heading">
-					<div className="section-head">
+					<div className="pricing-secondary-head">
 						<div>
 							<h2 id="extras-heading">其他選項</h2>
 							<p>第一次試用，或為現有訂閱加購 Credits。</p>
@@ -545,87 +558,74 @@ export default function PricingPage() {
 						</a>
 					</div>
 
-					<div className="extras-grid">
-						<article className="trial-strip" aria-labelledby="trial-heading">
+					<article className="trial-strip" aria-labelledby="trial-heading">
+						<div className="trial-strip-copy">
 							<h3 id="trial-heading">第一次用？HK$29 試一篇</h3>
 							<p>
-								每帳戶限購一次，30 日內有效，包含 1 篇完整內容、3 頁大綱及 3 張圖片。
-								HK$29 不可重生成；48 小時內升級任何月費或年費方案，會從方案價扣減 HK$29。
+								每帳戶限購一次，30 日內有效。含 1 篇完整內容、3 頁大綱及 3 張圖片；48 小時內升級可扣減
+								HK$29。
 							</p>
-							<div className="service-actions">
-								<button
-									type="button"
-									className={`btn btn-amber${selectedProduct === trialProduct?.code ? " is-picked" : ""}`}
-									disabled={!trialProduct || busyProduct !== null}
-									onClick={() => trialProduct && startOrder(trialProduct.code)}
-								>
-									{busyProduct === trialProduct?.code ? "建立訂單中…" : "購買試用"}
-								</button>
-							</div>
-						</article>
+						</div>
+						<button
+							type="button"
+							className="btn btn-amber"
+							disabled={!trialProduct || busyProduct !== null}
+							onClick={() => trialProduct && startOrder(trialProduct.code)}
+						>
+							{busyProduct === trialProduct?.code ? "建立訂單中…" : "購買試用"}
+						</button>
+					</article>
 
-						<article className="credit-panel" aria-labelledby="credits-heading">
-							<div className="section-head">
-								<div>
-									<h3 id="credits-heading">Credits 加購</h3>
-									<p>
-										1 Credit 可重生成 1 張圖片；5 Credits 可加開 1 篇文章（包含大綱及 3 張圖片，不設免費重生成）。
-									</p>
-								</div>
-								<CreditCard size={28} aria-hidden="true" />
+					<article className="credit-panel" aria-labelledby="credits-heading">
+						<div className="credit-panel-head">
+							<div>
+								<h3 id="credits-heading">Credits 加購</h3>
+								<p>1 Credit = 重生成 1 張圖；5 Credits = 加開 1 篇文章。</p>
 							</div>
-							<div className="credit-list">
-								{creditProducts.map((product) => (
-									<div
-										key={product.code}
-										className={`credit-row${selectedProduct === product.code ? " is-selected" : ""}`}
-									>
-										<div>
-											<h3>{product.name_zh}</h3>
-											<p>{product.metadata.summary ?? `${product.credits_amount} Credits`}</p>
-										</div>
-										<strong>{formatHkd(product.price_hkd)}</strong>
-										<button
-											type="button"
-											className="btn btn-outline btn-sm"
-											disabled={busyProduct !== null}
-											onClick={() => startOrder(product.code)}
-										>
-											{busyProduct === product.code ? "建立中…" : "購買"}
-										</button>
+						</div>
+						<div className="credit-grid">
+							{creditProducts.map((product) => (
+								<div
+									key={product.code}
+									className={`credit-card${selectedProduct === product.code ? " is-selected" : ""}`}
+								>
+									<div>
+										<h4>{product.name_zh}</h4>
+										<p>{product.metadata.summary ?? `${product.credits_amount} Credits`}</p>
 									</div>
-								))}
-							</div>
-						</article>
-					</div>
+									<strong>{formatHkd(product.price_hkd)}</strong>
+									<button
+										type="button"
+										className="btn btn-outline btn-sm"
+										disabled={busyProduct !== null}
+										onClick={() => startOrder(product.code)}
+									>
+										{busyProduct === product.code ? "建立中…" : "購買"}
+									</button>
+								</div>
+							))}
+						</div>
+					</article>
 				</section>
 
-				<section className="panel pricing-faq" aria-labelledby="faq-heading">
-					<div className="panel-head">
+				<section className="pricing-faq" aria-labelledby="faq-heading">
+					<div className="pricing-faq-head">
 						<h2 id="faq-heading">常見問題</h2>
+						<p>關於續期、轉方案、額度結轉與開通時間。</p>
 					</div>
-					<details>
-						<summary>會自動續期嗎？</summary>
-						<p className="service-note">
-							不會。月費及年費都是一次過預付，到期前我們會在站內通知你；到期後有 3 日寬限期。
-						</p>
-					</details>
-					<details>
-						<summary>可以中途轉方案嗎？</summary>
-						<p className="service-note">
-							可以。轉方案會在下一期生效，不設按比例退款；本期未使用的文章不會結轉。
-						</p>
-					</details>
-					<details>
-						<summary>未用的文章可以留到下個月嗎？</summary>
-						<p className="service-note">不可以。每月額度在該收費期內有效，未用部分不結轉。</p>
-					</details>
-					<details>
-						<summary>付款後多久開通？</summary>
-						<p className="service-note">
-							信用卡付款後一般即時開通；FPS 上載收據後由人手核對，一般 1 個工作天內完成。
-						</p>
-					</details>
+					<div className="faq-list">
+						{faqItems.map((item) => (
+							<details key={item.q} className="faq-item">
+								<summary>
+									<span>{item.q}</span>
+									<ChevronDown size={18} aria-hidden="true" className="faq-chevron" />
+								</summary>
+								<div className="faq-answer">
+									<p>{item.a}</p>
+								</div>
+							</details>
+						))}
+					</div>
 				</section>
 
 				<div className="pricing-footer-links">
