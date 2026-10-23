@@ -1,0 +1,16 @@
+# OPTIONAL: origin TLS + Cloudflare Full (strict) + DNS-only (grey cloud).
+# Not used while zone is orange-cloud + Flexible. See docs/cloudflare-idh-dns.md.
+{
+	email admin@idh.asia
+	admin off
+}
+
+idh.asia, www.idh.asia {
+	encode gzip
+	reverse_proxy idh:3000
+}
+
+billing.idh.asia {
+	encode gzip
+	reverse_proxy redpen-billing:8080
+}
