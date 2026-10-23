@@ -1,6 +1,5 @@
-# Use after DNS A records for idh.asia / www.idh.asia / billing.idh.asia
-# point to 187.127.107.38 with Cloudflare proxy DISABLED (grey cloud).
-#   cp Caddyfile.tls Caddyfile && docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+# OPTIONAL: origin TLS + Cloudflare Full (strict) + DNS-only (grey cloud).
+# Not used while zone is orange-cloud + Flexible. See docs/cloudflare-idh-dns.md.
 {
 	email admin@idh.asia
 	admin off

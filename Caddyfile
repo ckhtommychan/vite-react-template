@@ -1,6 +1,7 @@
-# DNS for idh.asia / www / billing still points at Cloudflare as of deploy time.
-# Keep auto_https off until A records point at 187.127.107.38 (grey-cloud / DNS only).
-# After DNS cutover, replace this file with Caddyfile.tls and reload Caddy.
+# Origin HTTP only — Cloudflare orange-cloud + SSL mode Flexible terminates TLS at CF
+# and connects to this Caddy on :80. Do NOT enable Caddyfile.tls / grey-cloud LE while
+# Flexible + proxied DNS is in use (would fight CF). Switch to Full (strict) only if
+# you later move TLS onto Caddy and set records to DNS-only.
 {
 	auto_https off
 	admin off
@@ -11,14 +12,12 @@ http://idh.asia, http://www.idh.asia {
 	reverse_proxy idh:3000
 }
 
-# Public billing origin used by VITE_BILLING_API_URL=https://billing.idh.asia
-# (HTTP until TLS is enabled; browsers may block mixed content from HTTPS pages).
 http://billing.idh.asia {
 	encode gzip
 	reverse_proxy redpen-billing:8080
 }
 
-# IP / default vhost for pre-DNS smoke tests
+# IP / default vhost for direct smoke tests
 :80 {
 	encode gzip
 	reverse_proxy idh:3000
