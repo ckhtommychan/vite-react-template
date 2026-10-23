@@ -1,4 +1,6 @@
 .service-page {
+	/* Fixed site-header (~76px) + mobile service nav (~48px). Desktop hides mobile nav. */
+	--service-header-offset: 7.75rem;
 	background: var(--bg);
 	min-height: 100vh;
 	display: flex;
@@ -7,7 +9,8 @@
 
 .service-main {
 	flex: 1;
-	padding: 2rem 0 4rem;
+	padding: 1.5rem 0 4rem;
+	padding-top: calc(var(--service-header-offset) + 1.25rem);
 }
 
 .service-wrap {
@@ -764,7 +767,7 @@
 	border-radius: 14px;
 	display: grid;
 	gap: 1.1rem;
-	scroll-margin-top: 5.5rem;
+	scroll-margin-top: calc(var(--service-header-offset) + 0.75rem);
 	animation: payment-reveal 0.4s ease;
 }
 
@@ -1176,7 +1179,8 @@
 
 @media (min-width: 40rem) {
 	.service-main {
-		padding: 3rem 0 5rem;
+		padding: 1.75rem 0 5rem;
+		padding-top: calc(var(--service-header-offset) + 1.5rem);
 	}
 
 	.payment-choice {
@@ -1235,6 +1239,10 @@
 }
 
 @media (min-width: 56rem) {
+	.service-page {
+		--service-header-offset: 5.25rem;
+	}
+
 	.service-nav {
 		display: flex;
 	}
