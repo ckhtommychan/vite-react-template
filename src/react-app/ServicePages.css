@@ -1,6 +1,6 @@
 .service-page {
 	/* Fixed site-header (~76px) + mobile service nav (~48px). Desktop hides mobile nav. */
-	--service-header-offset: 7.75rem;
+	--service-header-offset: 8.5rem;
 	background: var(--bg);
 	min-height: 100vh;
 	display: flex;
@@ -10,7 +10,7 @@
 .service-main {
 	flex: 1;
 	padding: 1.5rem 0 4rem;
-	padding-top: calc(var(--service-header-offset) + 1.25rem);
+	padding-top: calc(var(--service-header-offset) + 1.75rem);
 }
 
 .service-wrap {
@@ -1180,7 +1180,7 @@
 @media (min-width: 40rem) {
 	.service-main {
 		padding: 1.75rem 0 5rem;
-		padding-top: calc(var(--service-header-offset) + 1.5rem);
+		padding-top: calc(var(--service-header-offset) + 2rem);
 	}
 
 	.payment-choice {
@@ -1240,7 +1240,7 @@
 
 @media (min-width: 56rem) {
 	.service-page {
-		--service-header-offset: 5.25rem;
+		--service-header-offset: 5.5rem;
 	}
 
 	.service-nav {
